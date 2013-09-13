@@ -12,7 +12,7 @@ import copy
 COLUMNS_OF_BUTTONS=5
 dic={}
 class Japanese_Learning( Frame ):
-  def __init__( self):
+  def __init__( self, type='-h'):
     """Create and grid several components into the frame"""
     Frame.__init__( self )
     self.pack( expand = NO, fill = BOTH )
@@ -31,9 +31,11 @@ class Japanese_Learning( Frame ):
     self.button=[]
     self.buttonIndex={}
     self.maxrow=0
-    
-    #self.initializeData(r"data/hiragana.dat")
-    self.initializeData(r"data/katakana.dat")
+   
+    if (type == '-k'):
+      self.initializeData(r"data/katakana.dat")
+    else:
+      self.initializeData(r"data/hiragana.dat")
     self.dic=copy.deepcopy(dic)
     self.resultText=StringVar()
     self.suggestLabel = Label(self, textvariable = self.resultText)
@@ -124,7 +126,7 @@ class Japanese_Learning( Frame ):
     i=len(self.button)
     for record in records:                  # format each line
       fields = record.split()
-      if (len(fields)!=0):
+      if len(fields) != 0 and fields[0][0] != '#':
         dic[fields[0]]=fields[1]
         self.button.append(Button(self,text = fields[0]))
         self.buttonIndex[fields[0]]=i
@@ -141,7 +143,10 @@ class Japanese_Learning( Frame ):
     event.widget["font"]="Fixsys 15"
     #print event.widget["text"]
     self.dic[event.widget["text"]]=dic[event.widget["text"]]
-def main():
-  Japanese_Learning().mainloop()   
+def main(type):
+  Japanese_Learning(type).mainloop()   
 if __name__ == "__main__":
-  main()
+  type = '-h'
+  if len(sys.argv) > 1:
+    type = sys.argv[1]
+  main(type)
