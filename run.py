@@ -32,10 +32,8 @@ class Japanese_Learning( Frame ):
     self.buttonIndex={}
     self.maxrow=0
     
-    self.intalizeData(r"data/hiragana.dat")
-    self.intalizeData(r"data/hiragana-extra.dat")
-    #self.intalizeData(r"data/katakana.dat")
-    #self.intalizeData(r"data/katakana-extra.dat")
+    #self.initializeData(r"data/hiragana.dat")
+    self.initializeData(r"data/katakana.dat")
     self.dic=copy.deepcopy(dic)
     self.resultText=StringVar()
     self.suggestLabel = Label(self, textvariable = self.resultText)
@@ -111,7 +109,7 @@ class Japanese_Learning( Frame ):
       element=iter.next()
       n=n-1
     return element
-  def intalizeData(self,filename):
+  def initializeData(self,filename):
     self.wrong=0
     self.right=0
     try:
