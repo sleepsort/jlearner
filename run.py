@@ -12,7 +12,7 @@ import copy
 COLUMNS_OF_BUTTONS=5
 dic={}
 class Japanese_Learning( Frame ):
-  def __init__( self ):
+  def __init__( self):
     """Create and grid several components into the frame"""
     Frame.__init__( self )
     self.pack( expand = NO, fill = BOTH )
@@ -32,8 +32,10 @@ class Japanese_Learning( Frame ):
     self.buttonIndex={}
     self.maxrow=0
     
-    self.intalizeData(r"data/jiben.dat")
-    self.intalizeData(r"data/zhuoyin.dat")
+    self.intalizeData(r"data/hiragana.dat")
+    self.intalizeData(r"data/hiragana-extra.dat")
+    #self.intalizeData(r"data/katakana.dat")
+    #self.intalizeData(r"data/katakana-extra.dat")
     self.dic=copy.deepcopy(dic)
     self.resultText=StringVar()
     self.suggestLabel = Label(self, textvariable = self.resultText)
