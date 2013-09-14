@@ -164,12 +164,49 @@ class JLearner(Frame):
       self.suggestText.set(self.key)
       self.alarm = self.after(TIMEOUT * 1000, self.setTimeout)
       return
-    info = u"Complete!\n";
-    info += "Result:\t";
-    info += "Right Answers:\t%s\n" % str(self.right)
-    info += "\tWrong Answers:\t%s\n" % str(self.wrong)
-    showinfo("Message", info)
+    self.updatelog(r"data/log.dat")
     self.quit()
+
+  def updatelog(self, filename):
+    tests = [u'あ->a', u'ア->a', u'a->あ', u'a->ア']
+    values = [[0,0], [0,0], [0,0], [0,0]]
+    try:
+      file = open(filename, "rb")
+      num = 0
+      for line in file.readlines():
+        line = line.strip().split(':')[1]
+        line = line.strip().replace(' ', '=').split("=")
+        values[num][0] = int(line[1])
+        values[num][1] = int(line[3])
+        num += 1
+    except Exception, e:
+      pass
+
+    if self.type == '-hr':
+      prefix = tests[0]
+    elif self.type == '-kr':
+      prefix = tests[1]
+    elif self.type == '-rh':
+      prefix = tests[2]
+    else:
+      prefix = tests[3]
+
+    map = dict(zip(tests, values))
+    map[prefix][0] += self.right
+    map[prefix][1] += self.wrong
+
+    write = open(filename, "w").write
+    for key in tests:
+      write("%s: pass=%d fail=%d\n" % (key.encode('utf-8'), map[key][0], map[key][1]))
+
+    info = "Complete!\n\n";
+    info += "Result:\n";
+    info += "pass:=%d fail=%d\n\n" % (self.right, self.wrong)
+    info += "Total Summary:\n" 
+    info += "\tpass\tfail\n"
+    for key in tests:
+      info += "%s:\t%d\t%d\n" % (key.encode('utf-8'), map[key][0], map[key][1])
+    showinfo("Message", info)
 
   def init(self, filename):
     try:

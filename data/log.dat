@@ -1,0 +1,4 @@
+あ->a: pass=70 fail=12
+ア->a: pass=70 fail=9
+a->あ: pass=70 fail=11
+a->ア: pass=70 fail=10
