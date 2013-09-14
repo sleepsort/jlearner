@@ -10,13 +10,20 @@ import sys
 
 USAGE= '''
   usage:
-    Hiragana->Romaji test: ./run.py [-hr]
-    Katakana->Romaji test: ./run.py -kr
-    Romaji->Hiragana test: ./run.py -rh
-    Romaji->Katakana test: ./run.py -rk
+    ./run.py [TEST_OPTION] [RANDOM_OPTION]
+    
+    TEST_OPTION:
+      -hr  : Hiragana->Romaji test (default)
+      -kr  : Katakana->Romaji test
+      -rh  : Romaji->Hiragana test
+      -rk  : Romaji->Katakana test
+
+    RANDOM_OPTION:
+      -s   : shuffle character table
 '''
 
 BUTTON_COLUMNS = 5
+TIMEOUT = 3
 
 SUCCESS_COLOR = "red"
 DEFAULT_COLOR = "black"
@@ -25,7 +32,7 @@ DEFAULT_FONT = "Fixsys 15"
 DEFAULT_FONT_LARGE = "Fixsys 30"
 
 class JLearner(Frame):
-  def __init__(self, type='-hr'):
+  def __init__(self, type='-hr', shuffle=''):
     """Create and grid several components into the frame"""
     Frame.__init__(self)
     self.pack(expand = NO, fill = BOTH)
@@ -41,10 +48,12 @@ class JLearner(Frame):
     self.dic = {}
     self.copy = {}
 
-    self.type = type;
+    self.shuffle = shuffle
+    self.type = type
     self.buttons = {}
     self.row = 0
     self.key = "empty"
+    self.alarm = None
 
     if type == '-kr' or type == '-rk':
       self.dic = self.init(r"data/katakana.dat")
@@ -95,7 +104,16 @@ class JLearner(Frame):
       self.columnconfigure(i, weight = 1)
     self.next()
 
+  def setTimeout(self):
+    if self.type == '-rh' or self.type == '-rk':
+      key = self.dic.keys()[self.dic.values().index(self.key)]
+    else:
+      key = self.key
+    self.fail(key)
+    self.next()
+
   def confirmRomaji(self, event):
+    self.after_cancel(self.alarm)
     text = event.widget["text"]
     if text not in self.dic:
       return
@@ -107,6 +125,7 @@ class JLearner(Frame):
     self.next()
 
   def confirmKana(self, event):
+    self.after_cancel(self.alarm)
     input = self.inputText.get()
     if input != self.dic[self.key]:
       self.fail(self.key)
@@ -143,9 +162,13 @@ class JLearner(Frame):
       else:
         self.key = key
       self.suggestText.set(self.key)
+      self.alarm = self.after(TIMEOUT * 1000, self.setTimeout)
       return
-    showinfo("Message", u"Complete!\nResult:\tRight Answer:\t%s\n\tWrong Answer:\t%s"
-             % (str(self.right), str(self.wrong)))
+    info = u"Complete!\n";
+    info += "Result:\t";
+    info += "Right Answers:\t%s\n" % str(self.right)
+    info += "\tWrong Answers:\t%s\n" % str(self.wrong)
+    showinfo("Message", info)
     self.quit()
 
   def init(self, filename):
@@ -158,13 +181,17 @@ class JLearner(Frame):
       file = file[3:]
     file = file.decode("utf-8")
     records = file.splitlines(0)
-    n = len(self.buttons)
     map = {}
+    n = len(self.buttons)
+    if shuffle == '-s':
+      random.shuffle(records)
     for record in records:              # format each line
       fields = record.split()
       button = Button(self, text = "  ")
       button["font"] = DEFAULT_FONT
-      button.grid(row = self.row + n / BUTTON_COLUMNS, column = n % BUTTON_COLUMNS, sticky = W+E+N+S)
+      row = self.row + n / BUTTON_COLUMNS
+      column = n % BUTTON_COLUMNS
+      button.grid(row = row, column = column, sticky = W+E+N+S)
       if len(fields) != 0 and fields[0][0] != '#':  # ignore lines with heading '#'
         map[fields[0]] = fields[1]
         button["text"] = fields[0]
@@ -174,17 +201,22 @@ class JLearner(Frame):
           button.bind("<ButtonRelease>", self.retry)
         self.buttons[fields[0]] = button
       n = n + 1
-
     self.row += (n + BUTTON_COLUMNS - 1) / BUTTON_COLUMNS
     return map
 
-def main(type):
-  JLearner(type).mainloop()
+def main(type, shuffle):
+  JLearner(type, shuffle).mainloop()
 if __name__ == "__main__":
   type = '-hr'
+  shuffle = ''
   if len(sys.argv) > 1:
     type = sys.argv[1]
+  if len(sys.argv) > 2:
+    shuffle = sys.argv[2]
   if type not in ['-hr', '-kr', '-rk', '-rh']:
     print USAGE
     sys.exit(1)
-  main(type)
+  if shuffle not in ['', '-s']:
+    print USAGE
+    sys.exit(1)
+  main(type, shuffle)
