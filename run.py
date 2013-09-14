@@ -9,7 +9,7 @@ import sys
 USAGE= '''
   usage:
     ./run.py [TEST_OPTION] [RANDOM_OPTION]
-    
+
     TEST_OPTION:
       -hr  : Hiragana->Romaji test (default)
       -kr  : Katakana->Romaji test
@@ -30,7 +30,7 @@ DEFAULT_FONT = "Fixsys 15"
 DEFAULT_FONT_LARGE = "Fixsys 30"
 
 class JLearner(Frame):
-  def __init__(self, type='-hr', shuffle=''):
+  def __init__(self, optionType='-hr', optionShuffle=''):
     """Create and grid several components into the frame"""
     Frame.__init__(self)
     self.pack(expand = NO, fill = BOTH)
@@ -46,14 +46,14 @@ class JLearner(Frame):
     self.dic = {}
     self.copy = {}
 
-    self.shuffle = shuffle
-    self.type = type
+    self.optionShuffle = optionShuffle
+    self.optionType = optionType
     self.buttons = {}
     self.row = 0
     self.key = "empty"
     self.alarm = None
 
-    if type == '-kr' or type == '-rk':
+    if optionType == '-kr' or optionType == '-rk':
       self.dic = self.init(r"data/katakana.dat")
     else:
       self.dic = self.init(r"data/hiragana.dat")
@@ -67,8 +67,8 @@ class JLearner(Frame):
     suggestLabel["font"] = DEFAULT_FONT_LARGE
     suggestLabel.grid(rowspan = 2, columnspan=BUTTON_COLUMNS, sticky = W+E+N+S)
 
-    if type == '-hr' or type == '-kr':
-      hintText = u"Romanization:"
+    if optionType == '-hr' or optionType == '-kr':
+      hintText = u"Input Romaji:"
     else:
       hintText = u"Answer with button."
     hintText = hintText.encode("utf-8")
@@ -77,7 +77,7 @@ class JLearner(Frame):
     hintLabel["height"] = 1
     hintLabel.grid(row = self.row + 3, column = 0, columnspan = BUTTON_COLUMNS/2, sticky = W+E+N+S)
 
-    if type == '-hr' or type == '-kr':
+    if optionType == '-hr' or optionType == '-kr':
       self.inputText = StringVar()
       inputPane = Entry(self, textvariable = self.inputText)
       inputPane["width"]=10
@@ -103,7 +103,7 @@ class JLearner(Frame):
     self.next()
 
   def setTimeout(self):
-    if self.type == '-rh' or self.type == '-rk':
+    if self.optionType == '-rh' or self.optionType == '-rk':
       key = self.dic.keys()[self.dic.values().index(self.key)]
     else:
       key = self.key
@@ -124,8 +124,8 @@ class JLearner(Frame):
 
   def confirmKana(self, event):
     self.after_cancel(self.alarm)
-    input = self.inputText.get()
-    if input != self.dic[self.key]:
+    text = self.inputText.get()
+    if text != self.dic[self.key]:
       self.fail(self.key)
     else:
       self.success(self.key)
@@ -155,7 +155,7 @@ class JLearner(Frame):
   def next(self):
     if self.dic:
       key = random.choice(self.dic.keys())
-      if self.type == '-rh' or self.type == '-rk':
+      if self.optionType == '-rh' or self.optionType == '-rk':
         self.key = self.dic[key]
       else:
         self.key = key
@@ -180,30 +180,30 @@ class JLearner(Frame):
     except Exception, e:
       pass
 
-    if self.type == '-hr':
+    if self.optionType == '-hr':
       prefix = tests[0]
-    elif self.type == '-kr':
+    elif self.optionType == '-kr':
       prefix = tests[1]
-    elif self.type == '-rh':
+    elif self.optionType == '-rh':
       prefix = tests[2]
     else:
       prefix = tests[3]
 
-    map = dict(zip(tests, values))
-    map[prefix][0] += self.right
-    map[prefix][1] += self.wrong
+    count = dict(zip(tests, values))
+    count[prefix][0] += self.right
+    count[prefix][1] += self.wrong
 
     write = open(filename, "w").write
     for key in tests:
-      write("%s: pass=%d fail=%d\n" % (key.encode('utf-8'), map[key][0], map[key][1]))
+      write("%s: pass=%d fail=%d\n" % (key.encode('utf-8'), count[key][0], count[key][1]))
 
     info = "Complete!\n\n";
     info += "Result:\n";
     info += "pass:=%d fail=%d\n\n" % (self.right, self.wrong)
-    info += "Total Summary:\n" 
+    info += "Total Summary:\n"
     info += "\tpass\tfail\n"
     for key in tests:
-      info += "%s:\t%d\t%d\n" % (key.encode('utf-8'), map[key][0], map[key][1])
+      info += "%s:\t%d\t%d\n" % (key.encode('utf-8'), count[key][0], count[key][1])
     showinfo("Message", info)
 
   def init(self, filename):
@@ -214,10 +214,10 @@ class JLearner(Frame):
       sys.exit(1)
     file = file.decode("utf-8")
     records = file.splitlines(0)
+    if optionShuffle == '-s':
+      random.shuffle(records)
     map = {}
     n = len(self.buttons)
-    if shuffle == '-s':
-      random.shuffle(records)
     for record in records:              # format each line
       fields = record.split()
       button = Button(self, text = "  ")
@@ -228,7 +228,7 @@ class JLearner(Frame):
       if fields and fields[0][0] != '#':  # ignore lines with heading '#'
         map[fields[0]] = fields[1]
         button["text"] = fields[0]
-        if self.type == '-rh' or self.type == '-rk':
+        if self.optionType == '-rh' or self.optionType == '-rk':
           button.bind("<ButtonRelease>", self.confirmRomaji)
         else:
           button.bind("<ButtonRelease>", self.retry)
@@ -237,8 +237,8 @@ class JLearner(Frame):
     self.row += (n + BUTTON_COLUMNS - 1) / BUTTON_COLUMNS
     return map
 
-def main(type, shuffle):
-  JLearner(type, shuffle).mainloop()
+def main(optionType, optionShuffle):
+  JLearner(optionType, optionShuffle).mainloop()
 
 if __name__ == "__main__":
   argv = sys.argv[1:]
@@ -252,12 +252,12 @@ if __name__ == "__main__":
     print USAGE
     sys.exit(1)
 
-  type = '-hr'
-  shuffle = ''
-  
-  if option1:
-    type = option1[0]
-  if option2:
-    shuffle = option2[0]
+  optionType = '-hr'
+  optionShuffle = ''
 
-  main(type, shuffle)
+  if option1:
+    optionType = option1[0]
+  if option2:
+    optionShuffle = option2[0]
+
+  main(optionType, optionShuffle)
