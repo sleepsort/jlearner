@@ -2,9 +2,10 @@
 # -*- coding: utf-8 -*-
 '''
   usage: 
-    Hiragana test: ./run.py [-h] 
-    Katakana test: ./run.py -k
-    Romaji test:   ./run.py -r
+    Hiragana->Romaji test: ./run.py [-hr] 
+    Katakana->Romaji test: ./run.py -kr
+    Romaji->Hiragana test: ./run.py -rh
+    Romaji->Katakana test: ./run.py -rk
 '''
 from Tkinter import *
 from tkMessageBox import *
@@ -21,7 +22,7 @@ DEFAULT_FONT = "Fixsys 15"
 DEFAULT_FONT_LARGE = "Fixsys 30"
 
 class JLearner(Frame):
-  def __init__(self, type='-h'):
+  def __init__(self, type='-hr'):
     """Create and grid several components into the frame"""
     Frame.__init__(self)
     self.pack(expand = NO, fill = BOTH)
@@ -42,7 +43,7 @@ class JLearner(Frame):
     self.row = 0
     self.key = "empty"
    
-    if (type == '-k'):
+    if type == '-kr' or type == '-rk':
       self.dic = self.init(r"data/katakana.dat")
     else:
       self.dic = self.init(r"data/hiragana.dat")
@@ -56,7 +57,7 @@ class JLearner(Frame):
     suggestLabel["font"] = DEFAULT_FONT_LARGE
     suggestLabel.grid(rowspan = 2, columnspan=BUTTON_COLUMNS, sticky = W+E+N+S)
   
-    if type != '-r':
+    if type == '-hr' or type == '-kr':
       hintText = u"Romanization:"
     else:
       hintText = u"Answer with button."
@@ -66,7 +67,7 @@ class JLearner(Frame):
     hintLabel["height"] = 1
     hintLabel.grid(row = self.row + 3, column = 0, columnspan = BUTTON_COLUMNS/2, sticky = W+E+N+S)
 
-    if type != '-r':
+    if type == '-hr' or type == '-kr':
       self.inputText = StringVar()
       inputPane = Entry(self, textvariable = self.inputText)
       inputPane["width"]=10
@@ -93,6 +94,8 @@ class JLearner(Frame):
     
   def confirmRomaji(self, event):
     text = event.widget["text"]
+    if text not in self.dic:
+      return
     key = self.dic.keys()[self.dic.values().index(self.key)]
     if self.key != self.dic[text]:
       self.fail(key)
@@ -131,7 +134,7 @@ class JLearner(Frame):
   def update(self):
     if len(self.dic):
       key = random.choice(self.dic.keys())
-      if self.type == '-r':
+      if self.type == '-rh' or self.type == '-rk':
         self.key = self.dic[key]
       else:
         self.key = key
@@ -161,7 +164,7 @@ class JLearner(Frame):
       if len(fields) != 0 and fields[0][0] != '#':  # ignore lines with heading '#'
         map[fields[0]] = fields[1]
         button["text"] = fields[0]
-        if self.type == '-r':
+        if self.type == '-rh' or self.type == '-rk':
           button.bind("<ButtonRelease>", self.confirmRomaji)
         else:
           button.bind("<ButtonRelease>", self.retry)
