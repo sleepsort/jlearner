@@ -164,10 +164,10 @@ class JLearner(Frame):
       self.suggestText.set(self.key)
       self.alarm = self.after(TIMEOUT * 1000, self.setTimeout)
       return
-    self.updatelog(r"data/log.dat")
+    self.log(r"data/log.dat")
     self.quit()
 
-  def updatelog(self, filename):
+  def log(self, filename):
     tests = [u'あ->a', u'ア->a', u'a->あ', u'a->ア']
     values = [[0,0], [0,0], [0,0], [0,0]]
     try:
