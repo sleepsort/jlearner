@@ -4,8 +4,6 @@
 from Tkinter import *
 from tkMessageBox import *
 import random
-import time
-import codecs
 import sys
 
 USAGE= '''
@@ -155,7 +153,7 @@ class JLearner(Frame):
     self.quit()
 
   def next(self):
-    if len(self.dic):
+    if self.dic:
       key = random.choice(self.dic.keys())
       if self.type == '-rh' or self.type == '-rk':
         self.key = self.dic[key]
@@ -214,8 +212,6 @@ class JLearner(Frame):
     except IOError, message:
       print >> sys.stderr, "File could not be opened:", message
       sys.exit(1)
-    if file[:3] == codecs.BOM_UTF8:     # Byte Order Map in utf-8 file (created in Windonws)
-      file = file[3:]
     file = file.decode("utf-8")
     records = file.splitlines(0)
     map = {}
@@ -229,7 +225,7 @@ class JLearner(Frame):
       row = self.row + n / BUTTON_COLUMNS
       column = n % BUTTON_COLUMNS
       button.grid(row = row, column = column, sticky = W+E+N+S)
-      if len(fields) != 0 and fields[0][0] != '#':  # ignore lines with heading '#'
+      if fields and fields[0][0] != '#':  # ignore lines with heading '#'
         map[fields[0]] = fields[1]
         button["text"] = fields[0]
         if self.type == '-rh' or self.type == '-rk':
@@ -243,17 +239,25 @@ class JLearner(Frame):
 
 def main(type, shuffle):
   JLearner(type, shuffle).mainloop()
+
 if __name__ == "__main__":
+  argv = sys.argv[1:]
+
+  option1 = set(argv) & set(['-hr', '-kr', '-rk', '-rh'])
+  option2 = set(argv) & set(['-s'])
+  option1 = list(option1)
+  option2 = list(option2)
+
+  if argv and not option1 and not option2:
+    print USAGE
+    sys.exit(1)
+
   type = '-hr'
   shuffle = ''
-  if len(sys.argv) > 1:
-    type = sys.argv[1]
-  if len(sys.argv) > 2:
-    shuffle = sys.argv[2]
-  if type not in ['-hr', '-kr', '-rk', '-rh']:
-    print USAGE
-    sys.exit(1)
-  if shuffle not in ['', '-s']:
-    print USAGE
-    sys.exit(1)
+  
+  if option1:
+    type = option1[0]
+  if option2:
+    shuffle = option2[0]
+
   main(type, shuffle)
