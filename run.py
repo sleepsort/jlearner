@@ -1,18 +1,20 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
-'''
-  usage:
-    Hiragana->Romaji test: ./run.py [-hr]
-    Katakana->Romaji test: ./run.py -kr
-    Romaji->Hiragana test: ./run.py -rh
-    Romaji->Katakana test: ./run.py -rk
-'''
+
 from Tkinter import *
 from tkMessageBox import *
 import random
 import time
 import codecs
 import sys
+
+USAGE= '''
+  usage:
+    Hiragana->Romaji test: ./run.py [-hr]
+    Katakana->Romaji test: ./run.py -kr
+    Romaji->Hiragana test: ./run.py -rh
+    Romaji->Katakana test: ./run.py -rk
+'''
 
 BUTTON_COLUMNS = 5
 
@@ -182,4 +184,7 @@ if __name__ == "__main__":
   type = '-hr'
   if len(sys.argv) > 1:
     type = sys.argv[1]
+  if type not in ['-hr', '-kr', '-rk', '-rh']:
+    print USAGE
+    sys.exit(1)
   main(type)
