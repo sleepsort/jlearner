@@ -169,9 +169,9 @@ class JLearner(Frame):
     tests = [u'あ->a', u'ア->a', u'a->あ', u'a->ア']
     values = [[0,0], [0,0], [0,0], [0,0]]
     try:
-      file = open(filename, "rb")
+      data = open(filename, "rb")
       num = 0
-      for line in file.readlines():
+      for line in data.readlines():
         line = line.strip().split(':')[1]
         line = line.strip().replace(' ', '=').split("=")
         values[num][0] = int(line[1])
@@ -208,15 +208,15 @@ class JLearner(Frame):
 
   def init(self, filename):
     try:
-      file = open(filename, "rb").read()
+      data = open(filename, "rb").read()
     except IOError, message:
       print >> sys.stderr, "File could not be opened:", message
       sys.exit(1)
-    file = file.decode("utf-8")
-    records = file.splitlines(0)
+    data = data.decode("utf-8")
+    records = data.splitlines(0)
     if optionShuffle == '-s':
       random.shuffle(records)
-    map = {}
+    dic = {}
     n = len(self.buttons)
     for record in records:              # format each line
       fields = record.split()
@@ -226,7 +226,7 @@ class JLearner(Frame):
       column = n % BUTTON_COLUMNS
       button.grid(row = row, column = column, sticky = W+E+N+S)
       if fields and fields[0][0] != '#':  # ignore lines with heading '#'
-        map[fields[0]] = fields[1]
+        dic[fields[0]] = fields[1]
         button["text"] = fields[0]
         if self.optionType == '-rh' or self.optionType == '-rk':
           button.bind("<ButtonRelease>", self.confirmRomaji)
@@ -235,7 +235,7 @@ class JLearner(Frame):
         self.buttons[fields[0]] = button
       n = n + 1
     self.row += (n + BUTTON_COLUMNS - 1) / BUTTON_COLUMNS
-    return map
+    return dic 
 
 def main(optionType, optionShuffle):
   JLearner(optionType, optionShuffle).mainloop()
