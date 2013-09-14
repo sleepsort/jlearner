@@ -1,8 +1,8 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 '''
-  usage: 
-    Hiragana->Romaji test: ./run.py [-hr] 
+  usage:
+    Hiragana->Romaji test: ./run.py [-hr]
     Katakana->Romaji test: ./run.py -kr
     Romaji->Hiragana test: ./run.py -rh
     Romaji->Katakana test: ./run.py -rk
@@ -10,6 +10,7 @@
 from Tkinter import *
 from tkMessageBox import *
 import random
+import time
 import codecs
 import sys
 
@@ -42,7 +43,7 @@ class JLearner(Frame):
     self.buttons = {}
     self.row = 0
     self.key = "empty"
-   
+
     if type == '-kr' or type == '-rk':
       self.dic = self.init(r"data/katakana.dat")
     else:
@@ -56,13 +57,13 @@ class JLearner(Frame):
     suggestLabel["height"] = 3
     suggestLabel["font"] = DEFAULT_FONT_LARGE
     suggestLabel.grid(rowspan = 2, columnspan=BUTTON_COLUMNS, sticky = W+E+N+S)
-  
+
     if type == '-hr' or type == '-kr':
       hintText = u"Romanization:"
     else:
       hintText = u"Answer with button."
     hintText = hintText.encode("utf-8")
-    hintLabel = Label(self, text=hintText)
+    hintLabel = Label(self, text = hintText)
     hintLabel["width"] = 25
     hintLabel["height"] = 1
     hintLabel.grid(row = self.row + 3, column = 0, columnspan = BUTTON_COLUMNS/2, sticky = W+E+N+S)
@@ -88,10 +89,10 @@ class JLearner(Frame):
 
     # make second row/column expand
     self.rowconfigure(self.row + 1, weight = 1)
-    for i in range(0,BUTTON_COLUMNS):
-      self.columnconfigure(i, weight= 1)
-    self.update()
-    
+    for i in range(0, BUTTON_COLUMNS):
+      self.columnconfigure(i, weight = 1)
+    self.next()
+
   def confirmRomaji(self, event):
     text = event.widget["text"]
     if text not in self.dic:
@@ -101,7 +102,7 @@ class JLearner(Frame):
       self.fail(key)
     else:
       self.success(key)
-    self.update()
+    self.next()
 
   def confirmKana(self, event):
     input = self.inputText.get()
@@ -110,10 +111,11 @@ class JLearner(Frame):
     else:
       self.success(self.key)
     self.inputText.set("")
-    self.update()
+    self.next()
 
   def fail(self, key):
-    showinfo("Message", u"No no no\n"+key+":"+self.dic[key])
+    showerror("Message", u"No no no!\n"+key+":"+self.dic[key])
+    showerror("Message", u"Remember!\n"+key+":"+self.dic[key])
     self.wrong = self.wrong + 1
 
   def success(self, key):
@@ -131,7 +133,7 @@ class JLearner(Frame):
   def cancel(self, event):
     self.quit()
 
-  def update(self):
+  def next(self):
     if len(self.dic):
       key = random.choice(self.dic.keys())
       if self.type == '-rh' or self.type == '-rk':
@@ -175,9 +177,9 @@ class JLearner(Frame):
     return map
 
 def main(type):
-  JLearner(type).mainloop()   
+  JLearner(type).mainloop()
 if __name__ == "__main__":
-  type = '-h'
+  type = '-hr'
   if len(sys.argv) > 1:
     type = sys.argv[1]
   main(type)
