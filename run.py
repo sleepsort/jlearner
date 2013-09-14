@@ -1,150 +1,178 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
-
+'''
+  usage: 
+    Hiragana test: ./run.py [-h] 
+    Katakana test: ./run.py -k
+    Romaji test:   ./run.py -r
+'''
 from Tkinter import *
 from tkMessageBox import *
 import random
-import operator
-import sys
 import codecs
-import copy
+import sys
 
-COLUMNS_OF_BUTTONS=5
-dic={}
-class Japanese_Learning( Frame ):
-  def __init__( self, type='-h'):
+BUTTON_COLUMNS = 5
+
+SUCCESS_COLOR = "red"
+DEFAULT_COLOR = "black"
+SUCCESS_FONT = "Fixsys 15 bold"
+DEFAULT_FONT = "Fixsys 15"
+DEFAULT_FONT_LARGE = "Fixsys 30"
+
+class JLearner(Frame):
+  def __init__(self, type='-h'):
     """Create and grid several components into the frame"""
-    Frame.__init__( self )
-    self.pack( expand = NO, fill = BOTH )
-    self.master.title( "Japanese Learning" )
-    self.master.geometry( "300x700" )
+    Frame.__init__(self)
+    self.pack(expand = NO, fill = BOTH)
+    self.master.title("Japanese Learning")
+    self.master.geometry("300x700")
 
-    # main frame fills entire container, expands if necessary
-    self.master.rowconfigure( 0, weight = 1 )
-    self.master.columnconfigure( 0, weight = 1 )
-    self.grid( sticky = W+E+N+S )
+    self.master.rowconfigure(0, weight = 1)
+    self.master.columnconfigure(0, weight = 1)
+    self.grid(sticky = W+E+N+S)
 
-    self.wrong=IntVar()
-    self.right=IntVar()
-    self.dic={}
+    self.wrong = 0
+    self.right = 0
+    self.dic = {}
+    self.copy = {}
 
-    self.button=[]
-    self.buttonIndex={}
-    self.maxrow=0
+    self.type = type;
+    self.buttons = {}
+    self.row = 0
+    self.key = "empty"
    
     if (type == '-k'):
-      self.initializeData(r"data/katakana.dat")
+      self.dic = self.init(r"data/katakana.dat")
     else:
-      self.initializeData(r"data/hiragana.dat")
-    self.dic=copy.deepcopy(dic)
-    self.resultText=StringVar()
-    self.suggestLabel = Label(self, textvariable = self.resultText)
-    self.suggestLabel["width"]=20
-    self.suggestLabel["height"]=3
-    self.suggestLabel["font"]="Fixsys 30"
-    self.suggestLabel.grid( rowspan = 2, columnspan=COLUMNS_OF_BUTTONS,sticky = W+E+N+S )
-    
-    x=u"Romanization:"
-    x=x.encode( "utf-8" )
-    self.label1=Label(self,text=x)
-    self.label1["width"]=10
-    self.label1["height"]=1
-    self.label1.grid(row=self.maxrow+3,column=0,columnspan=COLUMNS_OF_BUTTONS/2,sticky = W+E+N+S)
+      self.dic = self.init(r"data/hiragana.dat")
+    self.copy = dict(self.dic)
 
-    self.inputText = Entry(self)
-    self.inputText["width"]=10
-    self.inputText.grid( row=self.maxrow+3, column=COLUMNS_OF_BUTTONS/2+1,columnspan=COLUMNS_OF_BUTTONS/2,sticky = W+E+N+S )
-    self.inputText.bind("<Return>", self.checkResult)
-    self.inputText.bind("<Escape>",self.cancel)
+    self.suggestText = StringVar()
+    self.suggestText.set(self.key)
+    suggestLabel = Label(self, textvariable = self.suggestText)
+    suggestLabel["width"] = 20
+    suggestLabel["height"] = 3
+    suggestLabel["font"] = DEFAULT_FONT_LARGE
+    suggestLabel.grid(rowspan = 2, columnspan=BUTTON_COLUMNS, sticky = W+E+N+S)
+  
+    if type != '-r':
+      hintText = u"Romanization:"
+    else:
+      hintText = u"Answer with button."
+    hintText = hintText.encode("utf-8")
+    hintLabel = Label(self, text=hintText)
+    hintLabel["width"] = 25
+    hintLabel["height"] = 1
+    hintLabel.grid(row = self.row + 3, column = 0, columnspan = BUTTON_COLUMNS/2, sticky = W+E+N+S)
 
-    self.confirmButton = Button( self, text = "Confirm", 
-      width = 25 )
-    self.confirmButton.grid( row = self.maxrow+5,column=0,columnspan=COLUMNS_OF_BUTTONS/2,sticky = W+E+N+S )
-    self.confirmButton["width"]=10
-    self.confirmButton.bind("<ButtonRelease>", self.checkResult)
+    if type != '-r':
+      self.inputText = StringVar()
+      inputPane = Entry(self, textvariable = self.inputText)
+      inputPane["width"]=10
+      inputPane.grid(row = self.row+3, column = BUTTON_COLUMNS/2+1, columnspan = BUTTON_COLUMNS/2, sticky = W+E+N+S)
+      inputPane.bind("<Return>", self.confirmKana)
+      inputPane.bind("<Escape>",self.cancel)
+      inputPane.focus_set()
 
-    self.cancelButton = Button( self, text = "Cancel" )
-    self.cancelButton.grid( row = self.maxrow+5, column=COLUMNS_OF_BUTTONS/2+1,columnspan=COLUMNS_OF_BUTTONS/2,sticky = W+E+N+S )
-    self.cancelButton["width"]=10
-    self.cancelButton.bind("<ButtonRelease>", self.cancel)
+      confirmButton = Button(self, text = "Confirm", width = 25)
+      confirmButton.grid(row = self.row+5, column = 0, columnspan = BUTTON_COLUMNS/2, sticky = W+E+N+S)
+      confirmButton["width"] = 10
+      confirmButton.bind("<ButtonRelease>", self.confirmKana)
+
+      cancelButton = Button(self, text = "Cancel")
+      cancelButton.grid(row = self.row+5, column = BUTTON_COLUMNS/2+1, columnspan = BUTTON_COLUMNS/2, sticky = W+E+N+S)
+      cancelButton["width"] = 10
+      cancelButton.bind("<ButtonRelease>", self.cancel)
 
     # make second row/column expand
-    self.rowconfigure( self.maxrow+1, weight = 1 )
-    for i in range(0,COLUMNS_OF_BUTTONS):
-      self.columnconfigure( i, weight = 1 )
-    self.getMessage()
+    self.rowconfigure(self.row + 1, weight = 1)
+    for i in range(0,BUTTON_COLUMNS):
+      self.columnconfigure(i, weight= 1)
+    self.update()
     
-  def checkResult(self,event):
-    self.input=self.inputText.get()
-    if(self.element=="empty"):
-      return
-    if(self.input != self.dic[self.element]):
-      showinfo("Message", u"No no no\n"+self.element+":"+self.dic[self.element])
-      self.wrong=self.wrong+1
+  def confirmRomaji(self, event):
+    text = event.widget["text"]
+    key = self.dic.keys()[self.dic.values().index(self.key)]
+    if self.key != self.dic[text]:
+      self.fail(key)
     else:
-      showinfo("Message", u"Right!")
-      self.right=self.right+1
-      self.button[self.buttonIndex[self.element]]["foreground"]="red"
-      self.button[self.buttonIndex[self.element]]["font"]+=" bold"
-      del self.dic[self.element]
-    self.inputText.delete(0,len(self.input))
-    self.getMessage()
-    #print str(self.right)+":"+str(len( self.dic ))
-    if (len(self.dic)==0):
-      showinfo("Message", u"Complete!\n"+"Result:\t"+
-          "Right Answer:\t"+str(self.right)+"\n"+"\t"
-          "Wrong Answer:\t"+str(self.wrong))
-      self.quit()
-  def cancel(self,event):
+      self.success(key)
+    self.update()
+
+  def confirmKana(self, event):
+    input = self.inputText.get()
+    if input != self.dic[self.key]:
+      self.fail(self.key)
+    else:
+      self.success(self.key)
+    self.inputText.set("")
+    self.update()
+
+  def fail(self, key):
+    showinfo("Message", u"No no no\n"+key+":"+self.dic[key])
+    self.wrong = self.wrong + 1
+
+  def success(self, key):
+    showinfo("Message", u"Right!")
+    self.right = self.right + 1
+    self.buttons[key]["foreground"] = SUCCESS_COLOR
+    self.buttons[key]["font"] = SUCCESS_FONT
+    del self.dic[key]
+
+  def retry(self, event):
+    event.widget["foreground"] = DEFAULT_COLOR
+    event.widget["font"] = DEFAULT_FONT
+    self.dic[event.widget["text"]] = self.copy[event.widget["text"]]
+
+  def cancel(self, event):
     self.quit()
-  def getMessage(self):
-    if(len( self.dic )):
-      i=random.randrange( 1, len( self.dic )+1)
-      self.element=self.getElement(i)
-      self.resultText.set(self.element)
-    else:
-      self.element="empty"
-  def getElement(self,n):
-    iter=self.dic.__iter__()
-    element=StringVar()
-    while(n):
-      element=iter.next()
-      n=n-1
-    return element
-  def initializeData(self,filename):
-    self.wrong=0
-    self.right=0
-    try:
-      file = open( filename, "rb" ).read()  # open file in write mode
-    except IOError, message:                # file open failed
-      print >> sys.stderr, "File could not be opened:", message
-      sys.exit( 1 )
-    if file[:3] == codecs.BOM_UTF8:         # first weird char in utf-8 file
-      file = file[3:]
-    file=file.decode("utf-8")
-    records=file.splitlines(0)
-    i=len(self.button)
-    for record in records:                  # format each line
-      fields = record.split()
-      if len(fields) != 0 and fields[0][0] != '#':
-        dic[fields[0]]=fields[1]
-        self.button.append(Button(self,text = fields[0]))
-        self.buttonIndex[fields[0]]=i
-        self.button[i].bind("<ButtonRelease>", self.retryWord)
+
+  def update(self):
+    if len(self.dic):
+      key = random.choice(self.dic.keys())
+      if self.type == '-r':
+        self.key = self.dic[key]
       else:
-        self.button.append(Button(self,text = "  "))
-      self.button[i].grid(row=self.maxrow+i/COLUMNS_OF_BUTTONS,column=operator.mod(i,COLUMNS_OF_BUTTONS),sticky=W+E+N+S)
-      self.button[i]["font"]="Fixsys 15"
-      
-      i=i+1
-    self.maxrow+=(i+COLUMNS_OF_BUTTONS-1)/COLUMNS_OF_BUTTONS
-  def retryWord(self,event):
-    event.widget["foreground"]="black"
-    event.widget["font"]="Fixsys 15"
-    #print event.widget["text"]
-    self.dic[event.widget["text"]]=dic[event.widget["text"]]
+        self.key = key
+      self.suggestText.set(self.key)
+      return
+    showinfo("Message", u"Complete!\nResult:\tRight Answer:\t%s\n\tWrong Answer:\t%s"
+             % (str(self.right), str(self.wrong)))
+    self.quit()
+
+  def init(self, filename):
+    try:
+      file = open(filename, "rb").read()
+    except IOError, message:
+      print >> sys.stderr, "File could not be opened:", message
+      sys.exit(1)
+    if file[:3] == codecs.BOM_UTF8:     # Byte Order Map in utf-8 file (created in Windonws)
+      file = file[3:]
+    file = file.decode("utf-8")
+    records = file.splitlines(0)
+    n = len(self.buttons)
+    map = {}
+    for record in records:              # format each line
+      fields = record.split()
+      button = Button(self, text = "  ")
+      button["font"] = DEFAULT_FONT
+      button.grid(row = self.row + n / BUTTON_COLUMNS, column = n % BUTTON_COLUMNS, sticky = W+E+N+S)
+      if len(fields) != 0 and fields[0][0] != '#':  # ignore lines with heading '#'
+        map[fields[0]] = fields[1]
+        button["text"] = fields[0]
+        if self.type == '-r':
+          button.bind("<ButtonRelease>", self.confirmRomaji)
+        else:
+          button.bind("<ButtonRelease>", self.retry)
+        self.buttons[fields[0]] = button
+      n = n + 1
+
+    self.row += (n + BUTTON_COLUMNS - 1) / BUTTON_COLUMNS
+    return map
+
 def main(type):
-  Japanese_Learning(type).mainloop()   
+  JLearner(type).mainloop()   
 if __name__ == "__main__":
   type = '-h'
   if len(sys.argv) > 1:
