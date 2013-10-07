@@ -54,9 +54,9 @@ class JLearner(Frame):
     self.alarm = None
 
     if optionType == '-kr' or optionType == '-rk':
-      self.dic = self.init(r"data/katakana.dat")
+      self.dic = self.init(r"data/kana/katakana.dat")
     else:
-      self.dic = self.init(r"data/hiragana.dat")
+      self.dic = self.init(r"data/kana/hiragana.dat")
     self.copy = dict(self.dic)
 
     self.suggestText = StringVar()
@@ -162,7 +162,7 @@ class JLearner(Frame):
       self.suggestText.set(self.key)
       self.alarm = self.after(TIMEOUT * 1000, self.setTimeout)
       return
-    self.log(r"data/log.dat")
+    self.log(r"log/kana.dat")
     self.quit()
 
   def log(self, filename):
