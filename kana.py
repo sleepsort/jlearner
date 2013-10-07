@@ -8,7 +8,7 @@ import sys
 
 USAGE= '''
   usage:
-    ./run.py [TEST_OPTION] [RANDOM_OPTION]
+    ./kana.py [TEST_OPTION] [RANDOM_OPTION]
 
     TEST_OPTION:
       -hr  : Hiragana->Romaji test (default)
