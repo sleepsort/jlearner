@@ -1,0 +1,5 @@
+At most four fields, separated by several spaces:
+
+[accent] [kana] [kanji] [chinese]
+
+The kanji field will always be surrounded by '[' & ']'
