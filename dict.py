@@ -15,7 +15,6 @@ USAGE= '''
     TEST_OPTION:
       -im  : Chinese->Kana using input method (default)
       -bt  : Chinese->Kana using buttons
-      -rj  : Kana->Romaji
 
     TEST_CORPUS:
       data files in data/dict (lesson5.dat as default)
@@ -522,7 +521,7 @@ if __name__ == "__main__":
     else:
       files.append(x)
 
-  option1 = set(options) & set(['-im', '-bt', '-rj'])
+  option1 = set(options) & set(['-im', '-bt'])
   option1 = list(option1)
 
   if options and not option1:
