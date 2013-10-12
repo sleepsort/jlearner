@@ -210,17 +210,17 @@ class Dict():
       line = processor.readline()
 
 class Logger(object):
-  def __init__(self):
+  def __init__(self, infix):
     self.id = os.getpid()
-    self.filename = 'log/%d.tmp' % self.id;
+    self.infix = infix
+    self.filename = 'log/%d.%s.tmp' % (self.id, infix);
     self.file = open(self.filename, 'w', 0)
     print >> self.file, "#LOG <flag> <key>"
     self.cleanup(self.filename)
 
   def cleanup(self, exclude):
-    oldlogs = set(glob.glob("log/*.tmp"))
+    oldlogs = set(glob.glob("log/*.%s.tmp" % self.infix))
     oldlogs.remove(exclude)
-    print oldlogs
     for name in oldlogs:
       file = open(name, 'r')
       if file.readline().find('#LOG') == -1:
@@ -231,7 +231,6 @@ class Logger(object):
         print >> self.file, line
       file.close()
       os.remove(name)
-    print "log init: [%d]" % self.id
 
   def write(self, flag, key):
     info = "%s %s" % (flag, key)
@@ -242,7 +241,7 @@ class Logger(object):
       self.file.close()
     collect = {}
     try:
-      file = open('log/dict.dat', 'rb')
+      file = open('log/dict.%s.dat' % self.infix, 'rb')
       if file.readline().find('#LOG') == -1:
         print "Previous log file invalid"
         file.close()
@@ -272,7 +271,7 @@ class Logger(object):
       else:
         collect[key][0] += 1
     newdata.close()
-    file = open('log/dict.dat', 'w', 0)
+    file = open('log/dict.%s.dat' % self.infix, 'w', 0)
     print >> file, "#LOG <pass> <fail> <key>"
 
     for key, val in collect.items():
@@ -283,14 +282,16 @@ class Logger(object):
 
 
 class Runner(object):
-  def __init__(self):
+  def __init__(self, optionType):
+    self.optionType = optionType
     self.pended = set(Dict.dicts.keys())
     self.failed = set()
     self.key  = None
     self.item = None
     self.totalpass = 0
     self.totalfail = 0
-    self.logger = Logger()
+    infix = optionType[1:]
+    self.logger = Logger(infix)
 
   def next(self):
     if not self.pended and self.failed:
@@ -308,7 +309,7 @@ class Runner(object):
 
   def testMatch(self, input):
     key, item = self.key, self.item
-    if item.kanji:
+    if self.optionType == '-im' and item.kanji:
       solution = item.kanji
     else:
       solution = key
@@ -345,7 +346,7 @@ class JLearner(Frame):
     Util.loadKanaDict(r"data/kana/mixed.dat")
     Dict.loadProblemDict(dictFiles)
 
-    self.runner = Runner()
+    self.runner = Runner(optionType)
     self.activeText = {"kana" : StringVar(), "accent" : StringVar(), 
                        "misc" : StringVar(), "chinese" : StringVar(), 
                        "input" : StringVar(), "counter" : StringVar() }
