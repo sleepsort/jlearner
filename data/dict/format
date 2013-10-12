@@ -1,5 +1,9 @@
 At most four fields, separated by several spaces:
 
-[accent] [kana] [kanji] [chinese]
+[accent] [kana] [kanji] [romaji] [chinese]
 
 The kanji field will always be surrounded by '[' & ']'
+The romaji field will always be surrounded by '<' & '>'
+
+The romaji field is only used for 'skewed' pronunciation, e.g.
+'は' pronounced as 'wa' in the middle of sentence.
