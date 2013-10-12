@@ -22,7 +22,6 @@ USAGE= '''
 '''
 
 BUTTON_COLUMNS = 11
-TIMEOUT = 30
 
 DEFAULT_COLOR = "black"
 SUCCESS_COLOR = "black"
@@ -332,6 +331,8 @@ class JLearner(Frame):
   def __init__(self, optionType='-im', dictFiles=[]):
     """Create and grid several components into the frame"""
     Frame.__init__(self)
+
+    self.bind_all("<Escape>", self.deleteKana)
     self.pack(expand = NO, fill = BOTH)
     self.master.title("Japanese Learning")
     if optionType == '-im':
@@ -342,6 +343,7 @@ class JLearner(Frame):
     self.master.rowconfigure(0, weight = 1)
     self.master.columnconfigure(0, weight = 1)
     self.grid(sticky = W+E+N+S)
+    self.lock = False
 
     Util.loadKanaDict(r"data/kana/mixed.dat")
     Dict.loadProblemDict(dictFiles)
@@ -395,6 +397,7 @@ class JLearner(Frame):
       self.row = self.row + 2;
     else:
       InputPane = Label(self, textvariable = self.activeText["kana"])
+      InputPane.focus_set()
       self.initButtons(r"data/kana/mixed.dat")
     self.activeWidgets["input"] = InputPane
 
@@ -424,6 +427,7 @@ class JLearner(Frame):
       self.activeWidgets["misc"]["foreground"] = SUCCESS_COLOR
       self.activeWidgets["misc"]["font"] = SUCCESS_FONT
       self.activeWidgets["input"]["state"] = 'disabled'
+      self.lock = True
       self.after(800, self.next)
     else:
       if not item.kanji:
@@ -433,25 +437,28 @@ class JLearner(Frame):
         self.activeWidgets["misc"]["foreground"] = FAIL_COLOR
         self.activeWidgets["misc"]["font"] = FAIL_FONT
       self.activeWidgets["input"]["state"] = 'disabled'
-      self.after(1500, self.next)
+      self.lock = True
+      self.after(2000, self.next)
 
   def inputKana(self, event):
-    kana = event.widget["text"]
-    text = self.activeText["kana"].get()
-    text, complete = Util.addSolutionChar(text, kana)
-    self.activeText["kana"].set(text)
-    if complete:
-      newtext = text.replace(' ', '')
-      self.activeText["input"].set(newtext)
-      self.testMatch(event)
-      #print Util.kanaToRomaji(newtext)
+    if not self.lock:
+      kana = event.widget["text"]
+      text = self.activeText["kana"].get()
+      text, complete = Util.addSolutionChar(text, kana)
+      self.activeText["kana"].set(text)
+      if complete:
+        newtext = text.replace(' ', '')
+        self.activeText["input"].set(newtext)
+        self.testMatch(event)
 
   def deleteKana(self, event):
-    text = self.activeText["kana"].get()
-    text, update = Util.delSolutionChar(text)
-    self.activeText["kana"].set(text)
+    if not self.lock:
+      text = self.activeText["kana"].get()
+      text, update = Util.delSolutionChar(text)
+      self.activeText["kana"].set(text)
 
   def next(self):
+    self.lock = False
     passed, total, hint, problem = self.runner.next()
     if problem:
       self.activeText["kana"].set(hint)
