@@ -1,4 +1,4 @@
-あ->a: pass=3652 fail=229
-ア->a: pass=2461 fail=134
+あ->a: pass=3723 fail=231
+ア->a: pass=2532 fail=137
 a->あ: pass=1146 fail=425
 a->ア: pass=1041 fail=342

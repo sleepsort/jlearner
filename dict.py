@@ -273,7 +273,8 @@ class Logger(object):
     file = open('log/dict.%s.dat' % self.infix, 'w', 0)
     print >> file, "#LOG <pass> <fail> <key>"
 
-    for key, val in collect.items():
+    for key in sorted(collect.iterkeys()):
+      val = collect[key]
       info = "%d %d %s" % (val[0], val[1], key)
       print >> file, info
     file.close()
