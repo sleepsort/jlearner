@@ -147,24 +147,28 @@ class DictProcessor():
     self.linenum = -1 
 
   def readline(self):
-    self.linenum += 1
-    if self.linenum == len(self.pending):
-      self.filenum += 1
-      if self.filenum == len(self.files):
-        return None
-      try:
-        data = open(self.files[self.filenum], 'rb').read()
-      except IOError, message:
-        print >> sys.stderr, "File cound not be opened:", message
-        sys.exit(1)
-      data = data.decode("utf-8")
-      self.pending = data.splitlines(0)
-      heading = self.pending[0]
-      if heading.find("#DICT") == -1:
-        self.linenum = len(self.pending)
-        return readline()
-      self.linenum = 1
-    return self.pending[self.linenum].split()
+    while True:
+      self.linenum += 1
+      if self.linenum == len(self.pending):
+        self.filenum += 1
+        if self.filenum == len(self.files):
+          return None
+        try:
+          data = open(self.files[self.filenum], 'rb').read()
+        except IOError, message:
+          print >> sys.stderr, "File cound not be opened:", message
+          sys.exit(1)
+        data = data.decode("utf-8")
+        self.pending = data.splitlines(0)
+        heading = self.pending[0]
+        if heading.find("#DICT") == -1:
+          self.linenum = len(self.pending)
+          continue 
+        self.linenum = 1
+      fields = self.pending[self.linenum].split()
+      if len(fields) <= 2:
+        continue
+      return fields
 
 class DictItem(object):
   def __init__(self, kana, accent, kanji, romaji, chinese):
