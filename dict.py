@@ -218,21 +218,27 @@ class Logger(object):
     self.filename = 'log/%d.%s.tmp' % (self.id, infix);
     self.file = open(self.filename, 'w', 0)
     print >> self.file, "#LOG <flag> <key>"
-    self.cleanup(self.filename)
+    self.done = self.cleanup(self.filename)
 
   def cleanup(self, exclude):
     oldlogs = set(glob.glob("log/*.%s.tmp" % self.infix))
     oldlogs.remove(exclude)
+    done = set()
     for name in oldlogs:
-      file = open(name, 'r')
-      if file.readline().find('#LOG') == -1:
-        print "%s isn't a valid log file, ignored!" % name
+      data = open(name, 'rb').read()
+      data = data.decode("utf-8")
+      records = data.splitlines(0)
+      if not records or records[0].find('#LOG') == -1:
+        print >> sys.stderr,"%s isn't a valid log file, ignored!" % name
         continue
-      for line in file:
+      for line in records[1:]:
         line = line.strip()
-        print >> self.file, line
-      file.close()
+        print >> self.file, line.encode('utf-8')
+        fields = line.split()
+        if fields[0] == '1':  # ignore passed items
+          done.add(fields[1])
       os.remove(name)
+    return done
 
   def write(self, flag, key):
     info = "%s %s" % (flag, key)
@@ -245,7 +251,7 @@ class Logger(object):
     try:
       file = open('log/dict.%s.dat' % self.infix, 'rb')
       if file.readline().find('#LOG') == -1:
-        print "Previous log file invalid"
+        print >> sys.stderr, "Previous log file invalid"
         file.close()
       else:
         for line in file:
@@ -295,6 +301,7 @@ class Runner(object):
     self.totalfail = 0
     infix = optionType[1:]
     self.logger = Logger(infix)
+    self.pended = self.pended - self.logger.done
 
   def next(self):
     if not self.pended and self.failed:
