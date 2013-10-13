@@ -51,12 +51,31 @@ class Util():
   @staticmethod
   def generateProblem(kana):
     problem = ""
+    cnt = 0
     for ch in kana:
+      if cnt == 10:
+        problem += "\n"
+        cnt = 0
       if not Util.isPunct(ch):
         problem += '__ '
       else:
         problem += ch + ' ' 
+      cnt += 1
     return problem
+
+  @staticmethod
+  def reformat(longstr):
+    if not longstr:
+      return longstr
+    changed = ""
+    cnt = 0
+    for ch in longstr:
+      if cnt == 10:
+        changed += "\n"
+        cnt = 0
+      changed += ch
+      cnt += 1
+    return changed
 
   @staticmethod
   def isPunct(ch):
@@ -137,7 +156,15 @@ class Util():
 
   @staticmethod
   def matchKana(truth, test):
-    return truth == test
+    truth = truth.replace(u'　', '')
+    truth = truth.replace(u'，', '')
+    truth = truth.replace(u'。', '')
+    truth = truth.replace(u' ', '')
+    test = test.replace(u'　', '')
+    test = test.replace(u'，', '')
+    test = test.replace(u'。', '')
+    test = test.replace(u' ', '')
+    return truth == test 
 
 class DictProcessor():
   def __init__(self, filepaths):
@@ -149,9 +176,9 @@ class DictProcessor():
   def readline(self):
     while True:
       self.linenum += 1
-      if self.linenum == len(self.pending):
+      if self.linenum >= len(self.pending):
         self.filenum += 1
-        if self.filenum == len(self.files):
+        if self.filenum >= len(self.files):
           return None
         try:
           data = open(self.files[self.filenum], 'rb').read()
@@ -160,25 +187,30 @@ class DictProcessor():
           sys.exit(1)
         data = data.decode("utf-8")
         self.pending = data.splitlines(0)
-        heading = self.pending[0]
-        if heading.find("#DICT") == -1:
+        if len(self.pending) <= 1 or self.pending[0].find("#DICT") == -1:
           self.linenum = len(self.pending)
           continue 
         self.linenum = 1
       fields = self.pending[self.linenum].split()
       if len(fields) <= 2:
+        print >> sys.stderr, "bogus line? %s" % fields
         continue
       return fields
 
 class DictItem(object):
-  def __init__(self, kana, accent, kanji, romaji, chinese):
+  def __init__(self, kana=None, accent=None, kanji=None, romaji=None, chinese=None):
     self.kana = kana
     self.accent = accent
     self.kanji = kanji
     self.romaji = romaji
     self.chinese = chinese
-    self.passed = 0
-    self.failed = 0
+
+  def copy(self, other):
+    self.kana = other.kana
+    self.accent = other.accent
+    self.kanji = other.kanji
+    self.romaji = other.romaji
+    self.chinese = other.chinese
 
 class Dict():
   dicts = {}
@@ -215,13 +247,13 @@ class Logger(object):
   def __init__(self, infix):
     self.id = os.getpid()
     self.infix = infix
-    self.filename = 'log/%d.%s.tmp' % (self.id, infix);
+    self.filename = 'log/dict.%s.%d.tmp' % (infix, self.id);
     self.file = open(self.filename, 'w', 0)
     print >> self.file, "#LOG <flag> <key>"
     self.done = self.cleanup(self.filename)
 
   def cleanup(self, exclude):
-    oldlogs = set(glob.glob("log/*.%s.tmp" % self.infix))
+    oldlogs = set(glob.glob("log/dict.%s.*.tmp" % self.infix))
     oldlogs.remove(exclude)
     done = set()
     for name in oldlogs:
@@ -284,7 +316,7 @@ class Logger(object):
 
     for key in sorted(collect.iterkeys()):
       val = collect[key]
-      info = "%d %d %s" % (val[0], val[1], key)
+      info = "%3d %3d   %s" % (val[0], val[1], key)
       print >> file, info
     file.close()
     os.remove(self.filename)
@@ -323,7 +355,7 @@ class Runner(object):
       solution = item.kanji
     else:
       solution = key
-    if input == solution:
+    if Util.matchKana(solution, input):
       success = True
       self.totalpass += 1
       self.logger.write(1, key)
@@ -333,6 +365,10 @@ class Runner(object):
       self.failed.add(key)
       self.logger.write(0, key)
     self.pended.remove(key)
+    item = DictItem()
+    item.copy(self.item)
+    item.kana = Util.reformat(item.kana)
+    item.kanji = Util.reformat(item.kanji)
     return item, success
 
   def stats(self):
@@ -350,7 +386,6 @@ class JLearner(Frame):
       self.master.geometry("300x200")
     else:
       self.master.geometry("300x700")
-
     self.master.rowconfigure(0, weight = 1)
     self.master.columnconfigure(0, weight = 1)
     self.grid(sticky = W+E+N+S)
@@ -360,65 +395,77 @@ class JLearner(Frame):
     Dict.loadProblemDict(dictFiles)
 
     self.runner = Runner(optionType)
-    self.activeText = {"kana" : StringVar(), "accent" : StringVar(), 
+    self.activeText = {"kana" : StringVar(), "accent"  : StringVar(), 
                        "misc" : StringVar(), "chinese" : StringVar(), 
-                       "input" : StringVar(), "counter" : StringVar() }
+                      "input" : StringVar(), "counter" : StringVar() }
     self.activeWidgets = {}
 
     self.row = 0
-    KanaPane = Label(self, textvariable = self.activeText["kana"])
+    KanaPane = Label(self)
+    KanaPane["textvariable"] = self.activeText["kana"]
     KanaPane["width"] = 20
-    KanaPane["height"] = 1
+    KanaPane["height"] = 2
     KanaPane["font"] = DEFAULT_FONT_LARGE
-    PadPane = Label(self, text= "")
-    PadPane["width"] = 1
-    PadPane.grid(row = self.row, rowspan = 2, column = 0, columnspan = 1,  sticky = W+E+N+S)
-    KanaPane.grid(row = self.row, rowspan = 2, column = 1, columnspan = BUTTON_COLUMNS - 2, sticky = W+E+N+S)
-    ShitPane = Label(self, textvariable = self.activeText["accent"])
-    ShitPane["width"] = 1
-    ShitPane.grid(row = self.row, rowspan = 2, column = BUTTON_COLUMNS - 1, columnspan = 1, sticky = W+E+N+S)
+    PadPane = Label(self)
+    PadPane["text"] = ""
+    PadPane["width"] = 2 
+    PadPane.grid(row = self.row, rowspan = 2, column = 0, columnspan = 1)
+    KanaPane.grid(row = self.row, rowspan = 2, column = 1, columnspan = BUTTON_COLUMNS - 2)
+    AccentPane = Label(self)
+    AccentPane["textvariable"] = self.activeText["accent"]
+    AccentPane["width"] = 2 
+    AccentPane.grid(row = self.row, rowspan = 2, column = BUTTON_COLUMNS - 1, columnspan = 1)
     self.activeWidgets["kana"] = KanaPane
     self.row += 2;
 
-    MiscPane = Label(self, textvariable = self.activeText["misc"])
+    MiscPane = Label(self)
+    MiscPane["textvariable"] = self.activeText["misc"]
     MiscPane["width"] = 20
-    MiscPane["height"] = 1
+    MiscPane["height"] = 2
     MiscPane["font"] = DEFAULT_FONT_MIDDLE
-    MiscPane.grid(row = self.row, rowspan = 2, columnspan=BUTTON_COLUMNS, sticky = W+E+N+S)
+    MiscPane.grid(row = self.row, rowspan = 2, columnspan=BUTTON_COLUMNS)
     self.activeWidgets["misc"] = MiscPane
     self.row += 2;
 
-    ChinesePane = Label(self, textvariable = self.activeText["chinese"])
-    ChinesePane["width"] = 20
-    ChinesePane["height"] = 3
+    ChinesePane = Label(self)
+    ChinesePane["textvariable"] = self.activeText["chinese"]
+    ChinesePane["width"] = 30
+    ChinesePane["height"] = 2
     ChinesePane["font"] = DEFAULT_FONT_MIDDLE
-    ChinesePane.grid(row = self.row, rowspan = 2, columnspan=BUTTON_COLUMNS, sticky = W+E+N+S)
+    ChinesePane.grid(row = self.row, rowspan = 2, columnspan=BUTTON_COLUMNS)
     self.activeWidgets["chinese"] = ChinesePane
     self.row += 2;
 
+    CounterPane = Label(self)
+    CounterPane["textvariable"] = self.activeText["counter"]
     if optionType == '-im':
-      InputPane = Entry(self, textvariable = self.activeText["input"])
-      InputPane.grid(row = self.row, column = 1, columnspan = BUTTON_COLUMNS - 2, sticky = W+E+N+S)
+      InputPane = Entry(self)
+      InputPane["textvariable"] = self.activeText["input"]
+      InputPane["width"] = 30
+      InputPane.grid(row = self.row, column = 1, columnspan = BUTTON_COLUMNS - 2)
       InputPane.focus_set()
       InputPane.bind("<Return>", self.testMatch)
-      confirmButton = Button(self, text = "ok", width = 25)
-      confirmButton.grid(row = self.row + 1, column = BUTTON_COLUMNS - 2, columnspan = 1, sticky = W+E+N+S)
-      confirmButton["width"] = 1
-      confirmButton.bind("<ButtonRelease>", self.testMatch)
+      ConfirmButton = Button(self)
+      ConfirmButton["text"] = "ok"
+      ConfirmButton["width"] = 1
+      ConfirmButton.bind("<ButtonRelease>", self.testMatch)
+      ConfirmButton.grid(row = self.row + 1, column = BUTTON_COLUMNS - 2, columnspan = 1)
+      CounterPane.grid(row = self.row + 1, columnspan = 3, column = 1)
       self.row = self.row + 2;
     else:
-      InputPane = Label(self, textvariable = self.activeText["kana"])
+      InputPane = Label(self)
+      InputPane["textvariable"] = self.activeText["kana"]
       InputPane.focus_set()
       self.initButtons(r"data/kana/mixed.dat")
+      CounterPane.grid(row = self.row, columnspan = 3, column = BUTTON_COLUMNS - 3)
     self.activeWidgets["input"] = InputPane
-
-    CounterPane = Label(self, textvariable = self.activeText["counter"])
-    CounterPane.grid(row = self.row, columnspan = 3, column=BUTTON_COLUMNS - 3, sticky = W+E+N+S)
 
     self.rowconfigure(self.row, weight = 1)
     for i in range(0, BUTTON_COLUMNS):
       self.columnconfigure(i, weight = 1)
-    self.next()
+    # TODO: when dict is empty, without this we have problem
+    # quit the program properly
+    self.after(50, self.next) 
 
   def testMatch(self, event):
     item, success = self.runner.testMatch(self.activeText["input"].get())
@@ -513,9 +560,8 @@ class JLearner(Frame):
         button.bind("<ButtonRelease>", self.inputKana)
       n = n + 1
     button = Button(self, text = "⬅ BackSpace")
-    button.grid(row = row + 1, column = 0, columnspan=4, sticky = W+E+N+S)
+    button.grid(row = row + 1, column = 0, columnspan=4)
     button.bind("<ButtonRelease>", self.deleteKana);
-    n = n + 1
     self.row += (n + BUTTON_COLUMNS - 1) / BUTTON_COLUMNS
 
 def main(optionType, dictFiles):

@@ -1,4 +1,4 @@
-#DICT: lesson5  <accent> <kana> <kanji[?]> <romaji<?>> <chinese>
+#DICT: <accent> <kana> <kanji[?]> <romaji<?>> <chinese>
 1 ほんぶん         [本文]          正文，课文
 0 かいわ           [会話]          会话
 1 ま               [馬]            (姓)马
@@ -77,3 +77,7 @@
 ? でした                           过去式，肯定
 ? ではありません           <dewaarimasen>         现在式，否定
 ? ではありませんでした     <dewaarimasendeshita>  过去式，否定
+3 シーディー       [ＣＤ]          光盘
+? はじめまして     [初めまして]    初次见面，请多关照
+? どうぞ，よろしくおねがいします  [どうぞ，よろしくお願いします]  请多指教
+? おはようございます               早上好!
