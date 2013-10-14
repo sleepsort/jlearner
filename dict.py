@@ -17,7 +17,7 @@ USAGE= '''
       -bt  : Chinese->Kana using buttons
 
     TEST_CORPUS:
-      data files in data/dict (lesson05.dat as default)
+      data files in data/dict (lesson06.dat as default)
 '''
 
 BUTTON_COLUMNS = 11
@@ -253,7 +253,10 @@ class Logger(object):
     self.done = self.cleanup(self.filename)
 
   def cleanup(self, exclude):
-    oldlogs = set(glob.glob("log/dict.%s.*.tmp" % self.infix))
+    oldlogs = glob.glob("log/dict.%s.*.tmp" % self.infix)
+    for index, item in enumerate(oldlogs):
+      oldlogs[index] = item.replace('\\', '/')
+    oldlogs = set(oldlogs)
     oldlogs.remove(exclude)
     done = set()
     for name in oldlogs:
@@ -385,7 +388,7 @@ class JLearner(Frame):
     if optionType == '-im':
       self.master.geometry("300x200")
     else:
-      self.master.geometry("300x700")
+      self.master.geometry("350x700")
     self.master.rowconfigure(0, weight = 1)
     self.master.columnconfigure(0, weight = 1)
     self.grid(sticky = W+E+N+S)
@@ -403,14 +406,13 @@ class JLearner(Frame):
     self.row = 0
     KanaPane = Label(self)
     KanaPane["textvariable"] = self.activeText["kana"]
-    KanaPane["width"] = 20
     KanaPane["height"] = 2
     KanaPane["font"] = DEFAULT_FONT_LARGE
     PadPane = Label(self)
     PadPane["text"] = ""
     PadPane["width"] = 2 
     PadPane.grid(row = self.row, rowspan = 2, column = 0, columnspan = 1)
-    KanaPane.grid(row = self.row, rowspan = 2, column = 1, columnspan = BUTTON_COLUMNS - 2)
+    KanaPane.grid(row = self.row, rowspan = 2, column = 1, columnspan = BUTTON_COLUMNS - 2, sticky = W+E+N+S)
     AccentPane = Label(self)
     AccentPane["textvariable"] = self.activeText["accent"]
     AccentPane["width"] = 2 
@@ -420,19 +422,17 @@ class JLearner(Frame):
 
     MiscPane = Label(self)
     MiscPane["textvariable"] = self.activeText["misc"]
-    MiscPane["width"] = 20
     MiscPane["height"] = 2
     MiscPane["font"] = DEFAULT_FONT_MIDDLE
-    MiscPane.grid(row = self.row, rowspan = 2, columnspan=BUTTON_COLUMNS)
+    MiscPane.grid(row = self.row, rowspan = 2, columnspan=BUTTON_COLUMNS, sticky = W+E+N+S)
     self.activeWidgets["misc"] = MiscPane
     self.row += 2;
 
     ChinesePane = Label(self)
     ChinesePane["textvariable"] = self.activeText["chinese"]
-    ChinesePane["width"] = 30
     ChinesePane["height"] = 2
     ChinesePane["font"] = DEFAULT_FONT_MIDDLE
-    ChinesePane.grid(row = self.row, rowspan = 2, columnspan=BUTTON_COLUMNS)
+    ChinesePane.grid(row = self.row, rowspan = 2, columnspan=BUTTON_COLUMNS, sticky = W+E+N+S)
     self.activeWidgets["chinese"] = ChinesePane
     self.row += 2;
 
@@ -441,16 +441,15 @@ class JLearner(Frame):
     if optionType == '-im':
       InputPane = Entry(self)
       InputPane["textvariable"] = self.activeText["input"]
-      InputPane["width"] = 30
-      InputPane.grid(row = self.row, column = 1, columnspan = BUTTON_COLUMNS - 2)
+      InputPane.grid(row = self.row, column = 1, columnspan = BUTTON_COLUMNS - 2, sticky = W+E+N+S)
       InputPane.focus_set()
       InputPane.bind("<Return>", self.testMatch)
       ConfirmButton = Button(self)
       ConfirmButton["text"] = "ok"
       ConfirmButton["width"] = 1
       ConfirmButton.bind("<ButtonRelease>", self.testMatch)
-      ConfirmButton.grid(row = self.row + 1, column = BUTTON_COLUMNS - 2, columnspan = 1)
-      CounterPane.grid(row = self.row + 1, columnspan = 3, column = 1)
+      ConfirmButton.grid(row = self.row + 1, column = BUTTON_COLUMNS - 2, columnspan = 1, sticky = W+E+N+S)
+      CounterPane.grid(row = self.row + 1, columnspan = 3, column = 1, sticky = W+E+N+S)
       self.row = self.row + 2;
     else:
       InputPane = Label(self)
@@ -586,7 +585,7 @@ if __name__ == "__main__":
     sys.exit(1)
 
   optionType = '-im'
-  dictFiles = ['data/dict/lesson05.dat']
+  dictFiles = ['data/dict/lesson06.dat']
 
   if option1:
     optionType = option1[0]
