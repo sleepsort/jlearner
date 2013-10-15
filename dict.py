@@ -25,11 +25,17 @@ BUTTON_COLUMNS = 11
 DEFAULT_COLOR = "black"
 SUCCESS_COLOR = "black"
 FAIL_COLOR = "red"
-DEFAULT_FONT = "Fixsys 15"
-SUCCESS_FONT = "Fixsys 15 bold"
-FAIL_FONT = "Fixsys 15 bold"
-DEFAULT_FONT_MIDDLE = "Fixsys 10"
-DEFAULT_FONT_LARGE = "Fixsys 15 bold"
+FONT_BASE = "Fixsys"
+#FONT_BASE = "AdobeFangsongStd"
+#FONT_BASE = "AdobeHeitiStd"
+#FONT_BASE = "AdobeSongStd"
+#FONT_BASE = "DroidSansMono"
+#FONT_BASE = "Times"
+DEFAULT_FONT = "%s 15" % FONT_BASE
+SUCCESS_FONT = "%s 15 bold" % FONT_BASE
+FAIL_FONT = "%s 15 bold" % FONT_BASE
+DEFAULT_FONT_MIDDLE = "%s 10" % FONT_BASE
+DEFAULT_FONT_LARGE = "%s 15 bold" % FONT_BASE
 
 class Util():
   kanas = {}
@@ -50,16 +56,18 @@ class Util():
 
   @staticmethod
   def generateProblem(kana):
-    problem = ""
-    cnt = 0
-    for ch in kana:
+    problem = "__"
+    cnt = 1 
+    for ch in kana[1:]:
       if cnt == 10:
         problem += "\n"
         cnt = 0
-      if not Util.isPunct(ch):
-        problem += '__ '
       else:
-        problem += ch + ' ' 
+        problem += " "
+      if not Util.isPunct(ch):
+        problem += "__"
+      else:
+        problem += ch
       cnt += 1
     return problem
 
@@ -96,20 +104,21 @@ class Util():
   @staticmethod
   def addSolutionChar(problem, kana): 
     text = problem.replace("__", kana, 1)
-    completed = (text.find("__ ") == -1)
+    completed = (text.find("__") == -1)
     return (text, completed)
 
   @staticmethod
   def delSolutionChar(problem):
     text = problem
-    pos = text.find("__ ")
+    pos = text.find("__")
     updated = (pos != 0)
     if pos == -1:
-      text = text[:-2] + "__ "
+      text = text[:-1] + "__"
     elif pos != 0:
       if Util.isPunct(text[pos-2:pos-1]):
         pos -= 2
-      text = text[:pos-2] + "__ " + text[pos:]
+      text = text[:pos-2] + "__" + text[pos-1:]
+    print text
     return (text, updated)
 
   @staticmethod
