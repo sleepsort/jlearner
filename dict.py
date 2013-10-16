@@ -145,6 +145,9 @@ class Util():
   def match_romaji(truth, test):
     if len(truth) != len(test):
       return False
+    for noise in ['.', ',', ' ', '\n', '\t']:
+      truth = truth.replace(noise, '')
+      test = test.replace(noise, '')    
     for (x, y) in zip(truth, test):
       if x == '~' and y in ['i', 'u', 'o']:
         continue
@@ -346,7 +349,9 @@ class Runner(object):
       solution = item.kanji
     else:
       solution = key
+    fake = Util.kana_to_romaji(key)
     success = Util.match_kana(solution, input)
+    success = success or Util.match_romaji(fake, input)
     if success:
       self.totalpass += 1
       self.logger.write(1, key)
@@ -490,7 +495,7 @@ class JLearner(Frame):
         self.active_widgets["misc"]["font"] = FAIL_FONT
       self.active_widgets["input"]["state"] = 'disabled'
       self.lock = True
-      self.after(2000, self.next)
+      self.after(3000, self.next)
 
   def add_kana(self, event):
     if not self.lock:
