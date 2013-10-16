@@ -154,7 +154,7 @@ class Util():
 
   @staticmethod
   def match_kana(truth, test):
-    for noise in [u'　', u'，', u'。', u' ']:
+    for noise in [u'　', u'，', u'。', u' ', u'\n']:
       truth = truth.replace(noise, '')
       test = test.replace(noise, '')
     return truth == test 
@@ -320,7 +320,6 @@ class Runner(object):
     self.pended = set(Dict.dicts.keys())
     self.failed = set()
     self.key  = None
-    self.item = None
     self.totalpass = 0
     self.totalfail = 0
     infix = option_type[1:]
@@ -335,14 +334,14 @@ class Runner(object):
     total = totalpass + len(self.failed) + len(self.pended)
     if self.pended:
       key = random.sample(self.pended, 1)[0]
-      self.item = Dict.dicts[key]
+      item = Dict.dicts[key]
       self.key = key
-      return totalpass, total, Util.generate_problem(key), self.item.chinese
+      return totalpass, total, Util.generate_problem(key), item.chinese
     self.logger.merge() 
     return totalpass, total, None, None
 
   def test(self, input):
-    key, item = self.key, self.item
+    key, item = self.key, Dict.dicts[self.key]
     if self.option_type == '-im' and item.kanji:
       solution = item.kanji
     else:
@@ -357,7 +356,7 @@ class Runner(object):
       self.logger.write(0, key)
     self.pended.remove(key)
     item = DictItem()
-    item.copy(self.item)
+    item.copy(Dict.dicts[key])
     item.kana = Util.reformat(item.kana)
     item.kanji = Util.reformat(item.kanji)
     return item, success
