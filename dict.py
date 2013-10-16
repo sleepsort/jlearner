@@ -23,15 +23,12 @@ USAGE= '''
 COLUMNS = 11
 
 FONT_BASE = "Fixsys"
-#FONT_BASE = "AdobeFangsongStd"
-#FONT_BASE = "AdobeHeitiStd"
-#FONT_BASE = "AdobeSongStd"
 #FONT_BASE = "DroidSansMono"
-#FONT_BASE = "Times"
+
 DEFAULT_FONT = "%s 15" % FONT_BASE
 SUCCESS_FONT = "%s 15 bold" % FONT_BASE
 FAIL_FONT    = "%s 15 bold" % FONT_BASE
-DEFAULT_FONT_MIDDLE = "%s 10" % FONT_BASE
+DEFAULT_FONT_MIDDLE = "%s 13" % FONT_BASE
 DEFAULT_FONT_LARGE  = "%s 15 bold" % FONT_BASE
 
 DEFAULT_COLOR = "black"
@@ -402,9 +399,9 @@ class JLearner(Frame):
     self.pack(expand = NO, fill = BOTH)
     self.master.title("Japanese Learning")
     if option_type == '-im':
-      self.master.geometry("300x200")
+      self.master.geometry("350x200")
     else:
-      self.master.geometry("350x700")
+      self.master.geometry("350x800")
     self.master.rowconfigure(0, weight = 1)
     self.master.columnconfigure(0, weight = 1)
     self.grid(sticky = W+E+N+S)
@@ -555,8 +552,8 @@ class JLearner(Frame):
         button["text"] = fields[0]
         button.bind("<ButtonRelease>", self.add_kana)
     del_button = Button(self)
-    del_button["text"] = "⬅ BackSpace"
-    del_button.grid(row = row + 1, column = 0, columnspan = 4)
+    del_button["text"] = "<- BackSpace(ESC)"
+    del_button.grid(row = row + 1, column = 0, columnspan = 5)
     del_button.bind("<ButtonRelease>", self.del_kana);
     self.row += (len(records) + COLUMNS - 1) / COLUMNS
 
