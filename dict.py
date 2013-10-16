@@ -20,11 +20,8 @@ USAGE= '''
       data files in data/dict (lesson06.dat as default)
 '''
 
-BUTTON_COLUMNS = 11
+COLUMNS = 11
 
-DEFAULT_COLOR = "black"
-SUCCESS_COLOR = "black"
-FAIL_COLOR = "red"
 FONT_BASE = "Fixsys"
 #FONT_BASE = "AdobeFangsongStd"
 #FONT_BASE = "AdobeHeitiStd"
@@ -33,20 +30,25 @@ FONT_BASE = "Fixsys"
 #FONT_BASE = "Times"
 DEFAULT_FONT = "%s 15" % FONT_BASE
 SUCCESS_FONT = "%s 15 bold" % FONT_BASE
-FAIL_FONT = "%s 15 bold" % FONT_BASE
+FAIL_FONT    = "%s 15 bold" % FONT_BASE
 DEFAULT_FONT_MIDDLE = "%s 10" % FONT_BASE
-DEFAULT_FONT_LARGE = "%s 15 bold" % FONT_BASE
+DEFAULT_FONT_LARGE  = "%s 15 bold" % FONT_BASE
+
+DEFAULT_COLOR = "black"
+SUCCESS_COLOR = "black"
+FAIL_COLOR    = "red"
+
+DEFAULT_KANA_PATH = r"data/kana/mixed.dat"
 
 class Util():
   kanas = {}
   @staticmethod
-  def loadKanaDict(filepath):
+  def load_kana_dict(filepath):
     try:
-      data = open(filepath, "rb").read()
+      data = open(filepath, "rb").read().decode("utf-8")
     except IOError, message:
-      print >> sys.stderr, "File could not be opened:", message
+      print >> sys.stderr, "Kana file could not be opened:", message
       sys.exit(1)
-    data = data.decode("utf-8")
     records = data.splitlines(0)
     dic = {}
     for record in records:                # format each line
@@ -55,7 +57,7 @@ class Util():
         Util.kanas[fields[0]] = fields[1]
 
   @staticmethod
-  def generateProblem(kana):
+  def generate_problem(kana):
     problem = "__"
     cnt = 1 
     for ch in kana[1:]:
@@ -64,7 +66,7 @@ class Util():
         cnt = 0
       else:
         problem += " "
-      if not Util.isPunct(ch):
+      if not Util.ispunct(ch):
         problem += "__"
       else:
         problem += ch
@@ -75,84 +77,75 @@ class Util():
   def reformat(longstr):
     if not longstr:
       return longstr
-    changed = ""
-    cnt = 0
-    for ch in longstr:
-      if cnt == 10:
-        changed += "\n"
-        cnt = 0
-      changed += ch
-      cnt += 1
-    return changed
+    slice = [longstr[i:i+10] for i in range(0, len(longstr), 10)]
+    return "\n".join(slice)
 
   @staticmethod
-  def isPunct(ch):
+  def ispunct(ch):
     return unicode(ch) in [u'，', u'。']
 
   @staticmethod
-  def isTyoon(ch):
+  def istyoon(ch):
     return unicode(ch) in [u'ー']
 
   @staticmethod
-  def isSokuon(ch):
+  def issokuon(ch):
     return unicode(ch) in [u'っ', u'ッ']
 
   @staticmethod
-  def isYoon(ch):
+  def isyoon(ch):
     return unicode(ch) in [u'ゃ', u'ゅ', u'ょ', u'ャ', u'ュ', u'ョ']
 
   @staticmethod
-  def addSolutionChar(problem, kana): 
+  def add_solution_char(problem, kana): 
     text = problem.replace("__", kana, 1)
     completed = (text.find("__") == -1)
     return (text, completed)
 
   @staticmethod
-  def delSolutionChar(problem):
+  def del_solution_char(problem):
     text = problem
     pos = text.find("__")
     updated = (pos != 0)
     if pos == -1:
       text = text[:-1] + "__"
     elif pos != 0:
-      if Util.isPunct(text[pos-2:pos-1]):
+      if Util.ispunct(text[pos-2:pos-1]):
         pos -= 2
       text = text[:pos-2] + "__" + text[pos-1:]
     return (text, updated)
 
   @staticmethod
-  def kanaToRomaji(kana):
+  def kana_to_romaji(kana):
     romaji = []
     repeat = False
-    size = 0
-    for ch in kana:
-      if Util.isPunct(ch):
+    for i, ch in enumerate(kana):
+      if Util.ispunct(ch):
         romaji.append(" ")
-      elif Util.isTyoon(ch):
+      elif Util.istyoon(ch):
         romaji.append("~")
-      elif Util.isSokuon(ch):
+      elif Util.issokuon(ch):
         repeat = True
         romaji.append("z")
-      elif Util.isYoon(ch):
-        last = romaji[size - 1]
+      elif Util.isyoon(ch):
+        last = romaji[i - 1]
         if last == 'chi':
-          romaji[size - 1] = 't'  # tya, tyu, tyo
+          romaji[i - 1] = 't'  # tya, tyu, tyo
         elif last == 'ji':
-          romaji[size - 1] = 'z'  # zya, zyu, zyo
+          romaji[i - 1] = 'z'  # zya, zyu, zyo
         else:
-          romaji[size - 1] = last[:1]
+          romaji[i - 1] = last[:1]
         romaji.append(Util.kanas[ch])
       else:
         cur = Util.kanas[ch]
         if repeat:
-          romaji[size - 1] = cur[:1]
+          romaji[i - 1] = cur[:1]
           repeat = False
         romaji.append(cur)
-      size += 1
     return ''.join(romaji)
  
   @staticmethod
-  def matchRomaji(truth, test):
+  def match_romaji(truth, test):
     if len(truth) != len(test):
       return False
     for (x, y) in zip(truth, test):
@@ -163,15 +156,10 @@ class Util():
     return True
 
   @staticmethod
-  def matchKana(truth, test):
-    truth = truth.replace(u'　', '')
-    truth = truth.replace(u'，', '')
-    truth = truth.replace(u'。', '')
-    truth = truth.replace(u' ', '')
-    test = test.replace(u'　', '')
-    test = test.replace(u'，', '')
-    test = test.replace(u'。', '')
-    test = test.replace(u' ', '')
+  def match_kana(truth, test):
+    for noise in [u'　', u'，', u'。', u' ']:
+      truth = truth.replace(noise, '')
+      test = test.replace(noise, '')
     return truth == test 
 
 class DictProcessor():
@@ -189,11 +177,10 @@ class DictProcessor():
         if self.filenum >= len(self.files):
           return None
         try:
-          data = open(self.files[self.filenum], 'rb').read()
+          data = open(self.files[self.filenum], 'rb').read().decode("utf-8")
         except IOError, message:
-          print >> sys.stderr, "File cound not be opened:", message
+          print >> sys.stderr, "Dict file cound not be opened:", message
           sys.exit(1)
-        data = data.decode("utf-8")
         self.pending = data.splitlines(0)
         if len(self.pending) <= 1 or self.pending[0].find("#DICT") == -1:
           self.linenum = len(self.pending)
@@ -201,7 +188,7 @@ class DictProcessor():
         self.linenum = 1
       fields = self.pending[self.linenum].split()
       if len(fields) <= 2:
-        print >> sys.stderr, "bogus line? %s" % fields
+        print >> sys.stderr, "Bogus line? %s" % fields
         continue
       return fields
 
@@ -224,7 +211,7 @@ class Dict():
   dicts = {}
 
   @staticmethod
-  def loadProblemDict(filepaths):
+  def load_problem_dict(filepaths):
     processor = DictProcessor(filepaths)
     line = processor.readline()
     while line:
@@ -262,14 +249,13 @@ class Logger(object):
 
   def cleanup(self, exclude):
     oldlogs = glob.glob("log/dict.%s.*.tmp" % self.infix)
-    for index, item in enumerate(oldlogs):
-      oldlogs[index] = item.replace('\\', '/')
+    for i, item in enumerate(oldlogs):
+      oldlogs[i] = item.replace('\\', '/')
     oldlogs = set(oldlogs)
     oldlogs.remove(exclude)
     done = set()
     for name in oldlogs:
-      data = open(name, 'rb').read()
-      data = data.decode("utf-8")
+      data = open(name, 'rb').read().decode("utf-8")
       records = data.splitlines(0)
       if not records or records[0].find('#LOG') == -1:
         print >> sys.stderr,"%s isn't a valid log file, ignored!" % name
@@ -299,8 +285,7 @@ class Logger(object):
       else:
         for line in file:
           line = line.strip().split()
-          passed, failed = int(line[0]), int(line[1])
-          key = line[2]
+          passed, failed, key = int(line[0]), int(line[1]), line[2]
           if key not in collect:
             collect[key] = [passed, failed]
           else:
@@ -313,8 +298,7 @@ class Logger(object):
     newdata.readline()
     for record in newdata:
       fields = record.split()
-      flag = int(fields[0])
-      key = fields[1]
+      flag, key = int(fields[0]), fields[1]
       if key not in collect:
         collect[key] = [0, 0]
       if flag == 0:
@@ -334,15 +318,15 @@ class Logger(object):
 
 
 class Runner(object):
-  def __init__(self, optionType):
-    self.optionType = optionType
+  def __init__(self, option_type):
+    self.option_type = option_type
     self.pended = set(Dict.dicts.keys())
     self.failed = set()
     self.key  = None
     self.item = None
     self.totalpass = 0
     self.totalfail = 0
-    infix = optionType[1:]
+    infix = option_type[1:]
     self.logger = Logger(infix)
     self.pended = self.pended - self.logger.done
 
@@ -356,22 +340,21 @@ class Runner(object):
       key = random.sample(self.pended, 1)[0]
       self.item = Dict.dicts[key]
       self.key = key
-      return totalpass, total, Util.generateProblem(key), self.item.chinese
+      return totalpass, total, Util.generate_problem(key), self.item.chinese
     self.logger.merge() 
     return totalpass, total, None, None
 
-  def testMatch(self, input):
+  def test(self, input):
     key, item = self.key, self.item
-    if self.optionType == '-im' and item.kanji:
+    if self.option_type == '-im' and item.kanji:
       solution = item.kanji
     else:
       solution = key
-    if Util.matchKana(solution, input):
-      success = True
+    success = Util.match_kana(solution, input)
+    if success:
       self.totalpass += 1
       self.logger.write(1, key)
     else:
-      success = False
       self.totalfail += 1
       self.failed.add(key)
       self.logger.write(0, key)
@@ -386,157 +369,165 @@ class Runner(object):
     return self.totalpass, self.totalfail
 
 class JLearner(Frame):
-  def __init__(self, optionType='-im', dictFiles=[]):
+  def __init__(self, option_type='-im', dict_files=[]):
     """Create and grid several components into the frame"""
     Frame.__init__(self)
 
-    self.bind_all("<Escape>", self.deleteKana)
+    Util.load_kana_dict(DEFAULT_KANA_PATH)
+    Dict.load_problem_dict(dict_files)
+
+    self.option_type = option_type
+    self.dict_files = dict_files
+
+    self.runner = Runner(option_type)
+
+    # text variables that might be updated in real time
+    self.active_text = {"kana" : StringVar(), "accent"  : StringVar(), 
+                        "misc" : StringVar(), "chinese" : StringVar(), 
+                       "input" : StringVar(), "counter" : StringVar()}
+
+    # widgets that might change style in real time
+    self.active_widgets = {"kana" : None, "misc"    : None,
+                          "input" : None, "chinese" : None }
+    
+    self.init_widgets()
+
+    self.lock = False
+    # TODO: when dict is empty, without this we have problem
+    # quit the program properly
+    self.after(50, self.next) 
+
+  def init_widgets(self):
+    self.bind_all("<Escape>", self.del_kana)
     self.pack(expand = NO, fill = BOTH)
     self.master.title("Japanese Learning")
-    if optionType == '-im':
+    if option_type == '-im':
       self.master.geometry("300x200")
     else:
       self.master.geometry("350x700")
     self.master.rowconfigure(0, weight = 1)
     self.master.columnconfigure(0, weight = 1)
     self.grid(sticky = W+E+N+S)
-    self.lock = False
-
-    Util.loadKanaDict(r"data/kana/mixed.dat")
-    Dict.loadProblemDict(dictFiles)
-
-    self.runner = Runner(optionType)
-    self.activeText = {"kana" : StringVar(), "accent"  : StringVar(), 
-                       "misc" : StringVar(), "chinese" : StringVar(), 
-                      "input" : StringVar(), "counter" : StringVar() }
-    self.activeWidgets = {}
 
     self.row = 0
-    KanaPane = Label(self)
-    KanaPane["textvariable"] = self.activeText["kana"]
-    KanaPane["height"] = 2
-    KanaPane["font"] = DEFAULT_FONT_LARGE
-    PadPane = Label(self)
-    PadPane["text"] = ""
-    PadPane["width"] = 2 
-    PadPane.grid(row = self.row, rowspan = 2, column = 0, columnspan = 1)
-    KanaPane.grid(row = self.row, rowspan = 2, column = 1, columnspan = BUTTON_COLUMNS - 2, sticky = W+E+N+S)
-    AccentPane = Label(self)
-    AccentPane["textvariable"] = self.activeText["accent"]
-    AccentPane["width"] = 2 
-    AccentPane.grid(row = self.row, rowspan = 2, column = BUTTON_COLUMNS - 1, columnspan = 1)
-    self.activeWidgets["kana"] = KanaPane
+    kana_pane = Label(self)
+    kana_pane["textvariable"] = self.active_text["kana"]
+    kana_pane["height"] = 2
+    kana_pane["font"] = DEFAULT_FONT_LARGE
+    pad_pane = Label(self)
+    pad_pane["text"] = ""
+    pad_pane["width"] = 2 
+    pad_pane.grid(row = self.row, rowspan = 2, column = 0, columnspan = 1)
+    kana_pane.grid(row = self.row, rowspan = 2, column = 1, columnspan = COLUMNS - 2, sticky = W+E+N+S)
+    accent_pane = Label(self)
+    accent_pane["textvariable"] = self.active_text["accent"]
+    accent_pane["width"] = 2 
+    accent_pane.grid(row = self.row, rowspan = 2, column = COLUMNS - 1, columnspan = 1)
+    self.active_widgets["kana"] = kana_pane
     self.row += 2;
 
-    MiscPane = Label(self)
-    MiscPane["textvariable"] = self.activeText["misc"]
-    MiscPane["height"] = 2
-    MiscPane["font"] = DEFAULT_FONT_MIDDLE
-    MiscPane.grid(row = self.row, rowspan = 2, columnspan=BUTTON_COLUMNS, sticky = W+E+N+S)
-    self.activeWidgets["misc"] = MiscPane
+    misc_pane = Label(self)
+    misc_pane["textvariable"] = self.active_text["misc"]
+    misc_pane["height"] = 2
+    misc_pane["font"] = DEFAULT_FONT_MIDDLE
+    misc_pane.grid(row = self.row, rowspan = 2, columnspan = COLUMNS, sticky = W+E+N+S)
+    self.active_widgets["misc"] = misc_pane
     self.row += 2;
 
-    ChinesePane = Label(self)
-    ChinesePane["textvariable"] = self.activeText["chinese"]
-    ChinesePane["height"] = 2
-    ChinesePane["font"] = DEFAULT_FONT_MIDDLE
-    ChinesePane.grid(row = self.row, rowspan = 2, columnspan=BUTTON_COLUMNS, sticky = W+E+N+S)
-    self.activeWidgets["chinese"] = ChinesePane
+    chinese_pane = Label(self)
+    chinese_pane["textvariable"] = self.active_text["chinese"]
+    chinese_pane["height"] = 2
+    chinese_pane["font"] = DEFAULT_FONT_MIDDLE
+    chinese_pane.grid(row = self.row, rowspan = 2, columnspan = COLUMNS, sticky = W+E+N+S)
+    self.active_widgets["chinese"] = chinese_pane
     self.row += 2;
 
-    CounterPane = Label(self)
-    CounterPane["textvariable"] = self.activeText["counter"]
-    if optionType == '-im':
-      InputPane = Entry(self)
-      InputPane["textvariable"] = self.activeText["input"]
-      InputPane.grid(row = self.row, column = 1, columnspan = BUTTON_COLUMNS - 2, sticky = W+E+N+S)
-      InputPane.focus_set()
-      InputPane.bind("<Return>", self.testMatch)
-      ConfirmButton = Button(self)
-      ConfirmButton["text"] = "ok"
-      ConfirmButton["width"] = 1
-      ConfirmButton.bind("<ButtonRelease>", self.testMatch)
-      ConfirmButton.grid(row = self.row + 1, column = BUTTON_COLUMNS - 2, columnspan = 1, sticky = W+E+N+S)
-      CounterPane.grid(row = self.row + 1, columnspan = 3, column = 1, sticky = W+E+N+S)
+    counter_pane = Label(self)
+    counter_pane["textvariable"] = self.active_text["counter"]
+    if self.option_type == '-im':
+      input_pane = Entry(self)
+      input_pane["textvariable"] = self.active_text["input"]
+      input_pane.grid(row = self.row, column = 1, columnspan = COLUMNS - 2, sticky = W+E+N+S)
+      input_pane.focus_set()
+      input_pane.bind("<Return>", self.test)
+      confirm_button = Button(self)
+      confirm_button["text"] = "ok"
+      confirm_button["width"] = 1
+      confirm_button.bind("<ButtonRelease>", self.test)
+      confirm_button.grid(row = self.row + 1, column = COLUMNS - 2, columnspan = 1, sticky = W+E+N+S)
+      counter_pane.grid(row = self.row + 1, columnspan = 3, column = 1, sticky = W+E+N+S)
       self.row = self.row + 2;
     else:
-      InputPane = Label(self)
-      InputPane["textvariable"] = self.activeText["kana"]
-      InputPane.focus_set()
-      self.initButtons(r"data/kana/mixed.dat")
-      CounterPane.grid(row = self.row, columnspan = 3, column = BUTTON_COLUMNS - 3)
-    self.activeWidgets["input"] = InputPane
+      input_pane = Label(self)
+      input_pane["textvariable"] = self.active_text["kana"]
+      input_pane.focus_set()
+      self.init_buttons()
+      counter_pane.grid(row = self.row, columnspan = 3, column = COLUMNS - 3)
+    self.active_widgets["input"] = input_pane
 
     self.rowconfigure(self.row, weight = 1)
-    for i in range(0, BUTTON_COLUMNS):
+    for i in range(0, COLUMNS):
       self.columnconfigure(i, weight = 1)
-    # TODO: when dict is empty, without this we have problem
-    # quit the program properly
-    self.after(50, self.next) 
 
-  def testMatch(self, event):
-    item, success = self.runner.testMatch(self.activeText["input"].get())
+  def test(self, event):
+    item, success = self.runner.test(self.active_text["input"].get())
     kana = item.kana
-    accent = ""
-    misc = ""
-    if item.kanji:
-      misc = " [%s]" % item.kanji
-    if item.accent:
-      accent = "%s" % item.accent
-    self.activeText["kana"].set(kana)
-    self.activeText["misc"].set(misc)
-    self.activeText["accent"].set(accent)
+    misc = " [%s]" % item.kanji if item.kanji else ""
+    accent = "%s" % item.accent if item.accent else ""
+    self.active_text["kana"].set(kana)
+    self.active_text["misc"].set(misc)
+    self.active_text["accent"].set(accent)
     if success:
-      self.activeWidgets["kana"]["foreground"] = SUCCESS_COLOR
-      self.activeWidgets["kana"]["font"] = SUCCESS_FONT
-      self.activeWidgets["misc"]["foreground"] = SUCCESS_COLOR
-      self.activeWidgets["misc"]["font"] = SUCCESS_FONT
-      self.activeWidgets["input"]["state"] = 'disabled'
+      self.active_widgets["kana"]["foreground"] = SUCCESS_COLOR
+      self.active_widgets["kana"]["font"] = SUCCESS_FONT
+      self.active_widgets["misc"]["foreground"] = SUCCESS_COLOR
+      self.active_widgets["misc"]["font"] = SUCCESS_FONT
+      self.active_widgets["input"]["state"] = 'disabled'
       self.lock = True
       self.after(800, self.next)
     else:
       if not item.kanji:
-        self.activeWidgets["kana"]["foreground"] = FAIL_COLOR
-        self.activeWidgets["kana"]["font"] = FAIL_FONT
+        self.active_widgets["kana"]["foreground"] = FAIL_COLOR
+        self.active_widgets["kana"]["font"] = FAIL_FONT
       else:
-        self.activeWidgets["misc"]["foreground"] = FAIL_COLOR
-        self.activeWidgets["misc"]["font"] = FAIL_FONT
-      self.activeWidgets["input"]["state"] = 'disabled'
+        self.active_widgets["misc"]["foreground"] = FAIL_COLOR
+        self.active_widgets["misc"]["font"] = FAIL_FONT
+      self.active_widgets["input"]["state"] = 'disabled'
       self.lock = True
       self.after(2000, self.next)
 
-  def inputKana(self, event):
+  def add_kana(self, event):
     if not self.lock:
       kana = event.widget["text"]
-      text = self.activeText["kana"].get()
-      text, complete = Util.addSolutionChar(text, kana)
-      self.activeText["kana"].set(text)
+      text = self.active_text["kana"].get()
+      text, complete = Util.add_solution_char(text, kana)
+      self.active_text["kana"].set(text)
       if complete:
         newtext = text.replace(' ', '')
-        self.activeText["input"].set(newtext)
-        self.testMatch(event)
+        self.active_text["input"].set(newtext)
+        self.test(event)
 
-  def deleteKana(self, event):
+  def del_kana(self, event):
     if not self.lock:
-      text = self.activeText["kana"].get()
-      text, update = Util.delSolutionChar(text)
-      self.activeText["kana"].set(text)
+      text = self.active_text["kana"].get()
+      text, update = Util.del_solution_char(text)
+      self.active_text["kana"].set(text)
 
   def next(self):
     self.lock = False
     passed, total, hint, problem = self.runner.next()
     if problem:
-      self.activeText["kana"].set(hint)
-      self.activeText["misc"].set("")
-      self.activeText["accent"].set("")
-      self.activeText["chinese"].set(problem)
-      self.activeText["counter"].set("%d / %d" % (passed, total))
-      self.activeText["input"].set("")
-      self.activeWidgets["kana"]["foreground"] = DEFAULT_COLOR
-      self.activeWidgets["kana"]["font"] = DEFAULT_FONT
-      self.activeWidgets["misc"]["foreground"] = DEFAULT_COLOR
-      self.activeWidgets["misc"]["font"] = DEFAULT_FONT
-      self.activeWidgets["input"]["state"] = 'normal'
+      self.active_text["kana"].set(hint)
+      self.active_text["misc"].set("")
+      self.active_text["accent"].set("")
+      self.active_text["chinese"].set(problem)
+      self.active_text["counter"].set("%d / %d" % (passed, total))
+      self.active_text["input"].set("")
+      self.active_widgets["kana"]["foreground"] = DEFAULT_COLOR
+      self.active_widgets["kana"]["font"] = DEFAULT_FONT
+      self.active_widgets["misc"]["foreground"] = DEFAULT_COLOR
+      self.active_widgets["misc"]["font"] = DEFAULT_FONT
+      self.active_widgets["input"]["state"] = 'normal'
     else:
       passed, failed = self.runner.stats()
       info = "Well done!\n\n"
@@ -545,34 +536,32 @@ class JLearner(Frame):
       showinfo("Message", info)
       self.quit()
 
-  def initButtons(self, filename):
+  def init_buttons(self):
     try:
-      data = open(filename, "rb").read()
+      data = open(DEFAULT_KANA_PATH, "rb").read().decode("utf-8")
     except IOError, message:
-      print >> sys.stderr, "File could not be opened:", message
+      print >> sys.stderr, "Kana file could not be opened:", message
       sys.exit(1)
-    data = data.decode("utf-8")
     records = data.splitlines(0)
-    n = 0
-    for record in records:                # format each line
+    row = self.row
+    for i, record in enumerate(records):
       fields = record.split()
       button = Button(self, text = "  ")
       button["font"] = DEFAULT_FONT_MIDDLE
-      row = self.row + n / BUTTON_COLUMNS
-      column = n % BUTTON_COLUMNS
+      row = self.row + i / COLUMNS
+      column = i % COLUMNS
       button.grid(row = row, column = column, sticky = W+E+N+S)
       if fields and fields[0][0] != '#':  # ignore lines with heading '#'
-        Util.generateProblem(fields[0])
         button["text"] = fields[0]
-        button.bind("<ButtonRelease>", self.inputKana)
-      n = n + 1
-    button = Button(self, text = "⬅ BackSpace")
-    button.grid(row = row + 1, column = 0, columnspan=4)
-    button.bind("<ButtonRelease>", self.deleteKana);
-    self.row += (n + BUTTON_COLUMNS - 1) / BUTTON_COLUMNS
+        button.bind("<ButtonRelease>", self.add_kana)
+    del_button = Button(self)
+    del_button["text"] = "⬅ BackSpace"
+    del_button.grid(row = row + 1, column = 0, columnspan = 4)
+    del_button.bind("<ButtonRelease>", self.del_kana);
+    self.row += (len(records) + COLUMNS - 1) / COLUMNS
 
-def main(optionType, dictFiles):
-  JLearner(optionType, dictFiles).mainloop()
+def main(option_type, dict_files):
+  JLearner(option_type, dict_files).mainloop()
 
 if __name__ == "__main__":
   argv = sys.argv[1:]
@@ -592,12 +581,12 @@ if __name__ == "__main__":
     print USAGE
     sys.exit(1)
 
-  optionType = '-im'
-  dictFiles = ['data/dict/lesson06.dat']
+  option_type = '-im'
+  dict_files = ['data/dict/lesson06.dat']
 
   if option1:
-    optionType = option1[0]
+    option_type = option1[0]
   if files:
-    dictFiles = files
+    dict_files = files
 
-  main(optionType, dictFiles)
+  main(option_type, dict_files)
