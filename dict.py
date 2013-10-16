@@ -118,7 +118,6 @@ class Util():
       if Util.isPunct(text[pos-2:pos-1]):
         pos -= 2
       text = text[:pos-2] + "__" + text[pos-1:]
-    print text
     return (text, updated)
 
   @staticmethod
