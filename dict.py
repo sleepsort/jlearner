@@ -63,10 +63,10 @@ class Util():
         cnt = 0
       else:
         problem += " "
-      if not Util.ispunct(ch):
-        problem += "__"
-      else:
+      if Util.ispunct(ch):
         problem += ch
+      else:
+        problem += "__"
       cnt += 1
     return problem
 
@@ -79,7 +79,7 @@ class Util():
 
   @staticmethod
   def ispunct(ch):
-    return unicode(ch) in u'，。'
+    return unicode(ch) in u'，。〜'
 
   @staticmethod
   def istyoon(ch):
@@ -143,11 +143,11 @@ class Util():
  
   @staticmethod
   def match_romaji(truth, test):
+    for noise in '.,~ \n\t':
+      truth = truth.replace(noise, '')
+      test = test.replace(noise, '')
     if len(truth) != len(test):
       return False
-    for noise in '., \n\t':
-      truth = truth.replace(noise, '')
-      test = test.replace(noise, '')    
     for (x, y) in zip(truth, test):
       if x == '~' and y in '-iuo':
         continue
@@ -157,7 +157,7 @@ class Util():
 
   @staticmethod
   def match_kana(truth, test):
-    for noise in u'　，。 \n\t':
+    for noise in u'　，。〜 \n\t':
       truth = truth.replace(noise, '')
       test = test.replace(noise, '')
     return truth == test 
