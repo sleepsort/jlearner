@@ -474,6 +474,9 @@ class JLearner(Frame):
       self.columnconfigure(i, weight = 1)
 
   def test(self, event):
+    if self.lock:
+      return
+    self.lock = True
     item, success = self.runner.test(self.active_text["input"].get())
     kana = item.kana
     misc = " [%s]" % item.kanji if item.kanji else ""
@@ -487,7 +490,6 @@ class JLearner(Frame):
       self.active_widgets["misc"]["foreground"] = SUCCESS_COLOR
       self.active_widgets["misc"]["font"] = SUCCESS_FONT
       self.active_widgets["input"]["state"] = 'disabled'
-      self.lock = True
       self.after(800, self.next)
     else:
       if not item.kanji:
@@ -497,7 +499,6 @@ class JLearner(Frame):
         self.active_widgets["misc"]["foreground"] = FAIL_COLOR
         self.active_widgets["misc"]["font"] = FAIL_FONT
       self.active_widgets["input"]["state"] = 'disabled'
-      self.lock = True
       self.after(3000, self.next)
 
   def add_kana(self, event):
