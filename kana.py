@@ -20,19 +20,44 @@ USAGE= '''
       -s   : shuffle character table
 '''
 
-BUTTON_COLUMNS = 5
+COLUMNS = 5
 TIMEOUT = 3
 
-SUCCESS_COLOR = "red"
+FONT_BASE = "Fixsys"
+#FONT_BASE = "DroidSansMono"
+
+DEFAULT_FONT_LARGE = "%s 30" % FONT_BASE
+DEFAULT_FONT = "%s 15"      % FONT_BASE
+SUCCESS_FONT = "%s 15 bold" % FONT_BASE
+
 DEFAULT_COLOR = "black"
-SUCCESS_FONT = "Fixsys 15 bold"
-DEFAULT_FONT = "Fixsys 15"
-DEFAULT_FONT_LARGE = "Fixsys 30"
+SUCCESS_COLOR = "red"
 
 class JLearner(Frame):
-  def __init__(self, optionType='-hr', optionShuffle=''):
+  def __init__(self, option_type='-hr', option_shuffle=''):
     """Create and grid several components into the frame"""
     Frame.__init__(self)
+
+    self.option_shuffle = option_shuffle
+    self.option_type = option_type
+
+    self.wrong = 0
+    self.right = 0
+    self.pending = {}
+    self.backup = {}
+
+    self.active_text = {"suggest" : StringVar(), "input" : StringVar()}
+
+    self.key = "empty"
+    self.alarm = None
+
+    self.active_text["suggest"].set(self.key)
+
+    self.init_widgets()
+
+    self.after(50, self.next())
+
+  def init_widgets(self):
     self.pack(expand = NO, fill = BOTH)
     self.master.title("Japanese Learning")
     self.master.geometry("300x700")
@@ -41,126 +66,115 @@ class JLearner(Frame):
     self.master.columnconfigure(0, weight = 1)
     self.grid(sticky = W+E+N+S)
 
-    self.wrong = 0
-    self.right = 0
-    self.dic = {}
-    self.copy = {}
-
-    self.optionShuffle = optionShuffle
-    self.optionType = optionType
     self.buttons = {}
     self.row = 0
-    self.key = "empty"
-    self.alarm = None
 
-    if optionType == '-kr' or optionType == '-rk':
-      self.dic = self.init(r"data/kana/katakana.dat")
+    if option_type == '-kr' or option_type == '-rk':
+      self.pending = self.init_buttons(r"data/kana/katakana.dat")
     else:
-      self.dic = self.init(r"data/kana/hiragana.dat")
-    self.copy = dict(self.dic)
+      self.pending = self.init_buttons(r"data/kana/hiragana.dat")
+    self.backup = dict(self.pending)
 
-    self.suggestText = StringVar()
-    self.suggestText.set(self.key)
-    suggestLabel = Label(self, textvariable = self.suggestText)
-    suggestLabel["width"] = 20
-    suggestLabel["height"] = 3
-    suggestLabel["font"] = DEFAULT_FONT_LARGE
-    suggestLabel.grid(rowspan = 2, columnspan=BUTTON_COLUMNS, sticky = W+E+N+S)
+    suggest_pane = Label(self)
+    suggest_pane["textvariable"] = self.active_text["suggest"]
+    suggest_pane["width"] = 20
+    suggest_pane["font"] = DEFAULT_FONT_LARGE
+    suggest_pane.grid(row = self.row, rowspan = 2, columnspan=COLUMNS, sticky = W+E+N+S)
+    self.rowconfigure(self.row, weight = 1)
+    self.row += 2
 
-    if optionType == '-hr' or optionType == '-kr':
-      hintText = u"Input Romaji:"
+    if option_type == '-hr' or option_type == '-kr':
+      hint_text = u"Input Romaji:"
     else:
-      hintText = u"Answer with button."
-    hintText = hintText.encode("utf-8")
-    hintLabel = Label(self, text = hintText)
-    hintLabel["width"] = 25
-    hintLabel["height"] = 1
-    hintLabel.grid(row = self.row + 3, column = 0, columnspan = BUTTON_COLUMNS/2, sticky = W+E+N+S)
+      hint_text = u"Answer with button."
+    hint_text = hint_text.encode("utf-8")
+    hint_pane = Label(self, text = hint_text)
+    hint_pane["width"] = 25
+    hint_pane["height"] = 1
+    hint_pane.grid(row = self.row, column = 0, columnspan = COLUMNS/2, sticky = W+E+N+S)
 
-    if optionType == '-hr' or optionType == '-kr':
-      self.inputText = StringVar()
-      inputPane = Entry(self, textvariable = self.inputText)
-      inputPane["width"]=10
-      inputPane.grid(row = self.row+3, column = BUTTON_COLUMNS/2+1, columnspan = BUTTON_COLUMNS/2, sticky = W+E+N+S)
-      inputPane.bind("<Return>", self.confirmKana)
-      inputPane.bind("<Escape>",self.cancel)
-      inputPane.focus_set()
+    if option_type == '-hr' or option_type == '-kr':
+      input_pane = Entry(self)
+      input_pane["textvariable"] = self.active_text["input"]
+      input_pane["width"]=10
+      input_pane.grid(row = self.row, column = COLUMNS/2+1, columnspan = COLUMNS/2, sticky = W+E+N+S)
+      input_pane.bind("<Return>", self.test_kana)
+      input_pane.bind("<Escape>",self.cancel)
+      input_pane.focus_set()
+      self.row += 2
 
-      confirmButton = Button(self, text = "Confirm", width = 25)
-      confirmButton.grid(row = self.row+5, column = 0, columnspan = BUTTON_COLUMNS/2, sticky = W+E+N+S)
-      confirmButton["width"] = 10
-      confirmButton.bind("<ButtonRelease>", self.confirmKana)
+      confirm_button = Button(self, text = "Confirm", width = 25)
+      confirm_button.grid(row = self.row, column = 0, columnspan = COLUMNS/2, sticky = W+E+N+S)
+      confirm_button["width"] = 10
+      confirm_button.bind("<ButtonRelease>", self.test_kana)
 
-      cancelButton = Button(self, text = "Cancel")
-      cancelButton.grid(row = self.row+5, column = BUTTON_COLUMNS/2+1, columnspan = BUTTON_COLUMNS/2, sticky = W+E+N+S)
-      cancelButton["width"] = 10
-      cancelButton.bind("<ButtonRelease>", self.cancel)
+      cancel_button = Button(self, text = "Cancel")
+      cancel_button.grid(row = self.row, column = COLUMNS/2+1, columnspan = COLUMNS/2, sticky = W+E+N+S)
+      cancel_button["width"] = 10
+      cancel_button.bind("<ButtonRelease>", self.cancel)
 
-    # make second row/column expand
-    self.rowconfigure(self.row + 1, weight = 1)
-    for i in range(0, BUTTON_COLUMNS):
+    for i in range(0, COLUMNS):
       self.columnconfigure(i, weight = 1)
-    self.next()
 
-  def setTimeout(self):
-    if self.optionType == '-rh' or self.optionType == '-rk':
-      key = self.dic.keys()[self.dic.values().index(self.key)]
+  def set_timeout(self):
+    if self.option_type == '-rh' or self.option_type == '-rk':
+      key = self.pending.keys()[self.pending.values().index(self.key)]
     else:
       key = self.key
     self.fail(key)
     self.next()
 
-  def confirmRomaji(self, event):
+  def test_romaji(self, event):
     self.after_cancel(self.alarm)
     text = event.widget["text"]
-    if text not in self.dic:
+    if text not in self.pending:
       return
-    key = self.dic.keys()[self.dic.values().index(self.key)]
-    if self.key != self.dic[text]:
+    key = self.pending.keys()[self.pending.values().index(self.key)]
+    if self.key != self.pending[text]:
       self.fail(key)
     else:
       self.success(key)
     self.next()
 
-  def confirmKana(self, event):
+  def test_kana(self, event):
     self.after_cancel(self.alarm)
-    text = self.inputText.get()
-    if text != self.dic[self.key]:
+    text = self.active_text["input"].get()
+    if text != self.pending[self.key]:
       self.fail(self.key)
     else:
       self.success(self.key)
-    self.inputText.set("")
+    self.active_text["input"].set("")
     self.next()
 
   def fail(self, key):
-    showerror("Message", u"No no no!\n"+key+":"+self.dic[key])
-    showerror("Message", u"Remember!\n"+key+":"+self.dic[key])
-    self.wrong = self.wrong + 1
+    self.wrong += 1
+    showerror("Message", u"No no no!\n"+key+":"+self.pending[key])
+    showerror("Message", u"Remember!\n"+key+":"+self.pending[key])
 
   def success(self, key):
     showinfo("Message", u"Right!")
-    self.right = self.right + 1
+    self.right += 1
     self.buttons[key]["foreground"] = SUCCESS_COLOR
     self.buttons[key]["font"] = SUCCESS_FONT
-    del self.dic[key]
+    del self.pending[key]
 
   def retry(self, event):
     event.widget["foreground"] = DEFAULT_COLOR
     event.widget["font"] = DEFAULT_FONT
-    self.dic[event.widget["text"]] = self.copy[event.widget["text"]]
+    self.pending[event.widget["text"]] = self.backup[event.widget["text"]]
 
   def cancel(self, event):
     self.quit()
 
   def next(self):
-    if self.dic:
-      key = random.choice(self.dic.keys())
-      if self.optionType == '-rh' or self.optionType == '-rk':
-        self.key = self.dic[key]
+    if self.pending:
+      key = random.choice(self.pending.keys())
+      if self.option_type == '-rh' or self.option_type == '-rk':
+        self.key = self.pending[key]
       else:
         self.key = key
-      self.suggestText.set(self.key)
-      self.alarm = self.after(TIMEOUT * 1000, self.setTimeout)
+      self.active_text["suggest"].set(self.key)
+      self.alarm = self.after(TIMEOUT * 1000, self.set_timeout)
       return
     self.log(r"log/kana.dat")
     self.quit()
@@ -170,21 +184,19 @@ class JLearner(Frame):
     values = [[0,0], [0,0], [0,0], [0,0]]
     try:
       data = open(filename, "rb")
-      num = 0
-      for line in data.readlines():
+      for i, line in enumerate(data.readlines()):
         line = line.strip().split(':')[1]
         line = line.strip().replace(' ', '=').split("=")
-        values[num][0] = int(line[1])
-        values[num][1] = int(line[3])
-        num += 1
+        values[i][0] = int(line[1])
+        values[i][1] = int(line[3])
     except Exception, e:
       pass
 
-    if self.optionType == '-hr':
+    if self.option_type == '-hr':
       prefix = tests[0]
-    elif self.optionType == '-kr':
+    elif self.option_type == '-kr':
       prefix = tests[1]
-    elif self.optionType == '-rh':
+    elif self.option_type == '-rh':
       prefix = tests[2]
     else:
       prefix = tests[3]
@@ -206,39 +218,36 @@ class JLearner(Frame):
       info += "%s:\t%d\t%d\n" % (key.encode('utf-8'), count[key][0], count[key][1])
     showinfo("Message", info)
 
-  def init(self, filename):
+  def init_buttons(self, filename):
     try:
-      data = open(filename, "rb").read()
+      data = open(filename, "rb").read().decode("utf-8")
     except IOError, message:
       print >> sys.stderr, "File could not be opened:", message
       sys.exit(1)
-    data = data.decode("utf-8")
     records = data.splitlines(0)
-    if optionShuffle == '-s':
+    if option_shuffle == '-s':
       random.shuffle(records)
     dic = {}
-    n = len(self.buttons)
-    for record in records:              # format each line
+    for i, record in enumerate(records):
       fields = record.split()
       button = Button(self, text = "  ")
       button["font"] = DEFAULT_FONT
-      row = self.row + n / BUTTON_COLUMNS
-      column = n % BUTTON_COLUMNS
+      row = self.row + i / COLUMNS
+      column = i % COLUMNS
       button.grid(row = row, column = column, sticky = W+E+N+S)
       if fields and fields[0][0] != '#':  # ignore lines with heading '#'
         dic[fields[0]] = fields[1]
         button["text"] = fields[0]
-        if self.optionType == '-rh' or self.optionType == '-rk':
-          button.bind("<ButtonRelease>", self.confirmRomaji)
+        if self.option_type == '-rh' or self.option_type == '-rk':
+          button.bind("<ButtonRelease>", self.test_romaji)
         else:
           button.bind("<ButtonRelease>", self.retry)
         self.buttons[fields[0]] = button
-      n = n + 1
-    self.row += (n + BUTTON_COLUMNS - 1) / BUTTON_COLUMNS
+    self.row += (len(records) + COLUMNS - 1) / COLUMNS
     return dic 
 
-def main(optionType, optionShuffle):
-  JLearner(optionType, optionShuffle).mainloop()
+def main(option_type, option_shuffle):
+  JLearner(option_type, option_shuffle).mainloop()
 
 if __name__ == "__main__":
   argv = sys.argv[1:]
@@ -252,12 +261,12 @@ if __name__ == "__main__":
     print USAGE
     sys.exit(1)
 
-  optionType = '-hr'
-  optionShuffle = ''
+  option_type = '-hr'
+  option_shuffle = ''
 
   if option1:
-    optionType = option1[0]
+    option_type = option1[0]
   if option2:
-    optionShuffle = option2[0]
+    option_shuffle = option2[0]
 
-  main(optionType, optionShuffle)
+  main(option_type, option_shuffle)
