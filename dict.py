@@ -55,20 +55,17 @@ class Util():
 
   @staticmethod
   def generate_problem(kana):
-    problem = "__"
-    cnt = 1 
-    for ch in kana[1:]:
-      if cnt == 10:
-        problem += "\n"
-        cnt = 0
-      else:
-        problem += " "
+    problem = ""
+    for idx, ch in enumerate(kana):
       if Util.ispunct(ch):
         problem += ch
       else:
         problem += "__"
-      cnt += 1
-    return problem
+      if (idx+1) % 10 == 0:
+        problem += "\n"
+      else:
+        problem += " "
+    return problem[:-1]
 
   @staticmethod
   def reformat(longstr):
@@ -94,7 +91,7 @@ class Util():
     return unicode(ch) in u'ゃゅょャュョ'
 
   @staticmethod
-  def add_solution_char(problem, kana): 
+  def add_solution_char(problem, kana):
     text = problem.replace("__", kana, 1)
     completed = (text.find("__") == -1)
     return (text, completed)
@@ -140,7 +137,7 @@ class Util():
           repeat = False
         romaji.append(cur)
     return ''.join(romaji)
- 
+
   @staticmethod
   def match_romaji(truth, test):
     for noise in '.,~ \n\t':
@@ -160,14 +157,14 @@ class Util():
     for noise in u'　，。〜 \n\t':
       truth = truth.replace(noise, '')
       test = test.replace(noise, '')
-    return truth == test 
+    return truth == test
 
 class DictProcessor():
   def __init__(self, filepaths):
     self.files = filepaths
     self.pending = []
-    self.filenum = -1 
-    self.linenum = -1 
+    self.filenum = -1
+    self.linenum = -1
 
   def readline(self):
     while True:
@@ -184,7 +181,7 @@ class DictProcessor():
         self.pending = data.splitlines(0)
         if len(self.pending) <= 1 or self.pending[0].find("#DICT") == -1:
           self.linenum = len(self.pending)
-          continue 
+          continue
         self.linenum = 1
       fields = self.pending[self.linenum].split()
       if len(fields) <= 2:
@@ -230,7 +227,7 @@ class Dict():
       chinese = set(line) - set((accent, kana, kanji, romaji))
       chinese = ' '.join(list(chinese))
       if accent == '?':
-        accent = None 
+        accent = None
       if kanji:
         kanji = kanji[1:-1]
       if romaji:
@@ -259,13 +256,13 @@ class Logger(object):
       records = data.splitlines(0)
       if not records or records[0].find('#LOG') == -1:
         print >> sys.stderr,"%s isn't a valid log file, ignored!" % name
-        continue
-      for line in records[1:]:
-        line = line.strip()
-        print >> self.file, line.encode('utf-8')
-        fields = line.split()
-        if fields[0] == '1':  # ignore passed items
-          done.add(fields[1])
+      else:
+        for line in records[1:]:
+          line = line.strip()
+          print >> self.file, line.encode('utf-8')
+          fields = line.split()
+          if fields[0] == '1':  # ignore passed items
+            done.add(fields[1])
       os.remove(name)
     return done
 
@@ -340,7 +337,7 @@ class Runner(object):
       item = Dict.dicts[key]
       self.key = key
       return totalpass, total, Util.generate_problem(key), item.chinese
-    self.logger.merge() 
+    self.logger.merge()
     return totalpass, total, None, None
 
   def test(self, input):
@@ -386,20 +383,20 @@ class JLearner(Frame):
     self.runner = Runner(option_type)
 
     # text variables that might be updated in real time
-    self.active_text = {"kana" : StringVar(), "accent"  : StringVar(), 
-                        "misc" : StringVar(), "chinese" : StringVar(), 
+    self.active_text = {"kana" : StringVar(), "accent"  : StringVar(),
+                        "misc" : StringVar(), "chinese" : StringVar(),
                        "input" : StringVar(), "counter" : StringVar()}
 
     # widgets that might change style in real time
     self.active_widgets = {"kana" : None, "misc"    : None,
                           "input" : None, "chinese" : None }
-    
+   
     self.init_widgets()
 
     self.lock = False
     # TODO: when dict is empty, without this we have problem
     # quit the program properly
-    self.after(50, self.next) 
+    self.after(50, self.next)
 
   def init_widgets(self):
     self.bind_all("<Escape>", self.del_kana)
@@ -420,12 +417,12 @@ class JLearner(Frame):
     kana_pane["font"] = DEFAULT_FONT_LARGE
     pad_pane = Label(self)
     pad_pane["text"] = ""
-    pad_pane["width"] = 2 
+    pad_pane["width"] = 2
     pad_pane.grid(row = self.row, rowspan = 2, column = 0, columnspan = 1)
     kana_pane.grid(row = self.row, rowspan = 2, column = 1, columnspan = COLUMNS - 2, sticky = W+E+N+S)
     accent_pane = Label(self)
     accent_pane["textvariable"] = self.active_text["accent"]
-    accent_pane["width"] = 2 
+    accent_pane["width"] = 2
     accent_pane.grid(row = self.row, rowspan = 2, column = COLUMNS - 1, columnspan = 1)
     self.active_widgets["kana"] = kana_pane
     self.row += 2;
@@ -570,7 +567,7 @@ def main(option_type, dict_files):
 
 if __name__ == "__main__":
   argv = sys.argv[1:]
-  
+ 
   options = []
   files = []
   for x in argv:

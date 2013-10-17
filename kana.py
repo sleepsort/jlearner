@@ -244,7 +244,7 @@ class JLearner(Frame):
           button.bind("<ButtonRelease>", self.retry)
         self.buttons[fields[0]] = button
     self.row += (len(records) + COLUMNS - 1) / COLUMNS
-    return dic 
+    return dic
 
 def main(option_type, option_shuffle):
   JLearner(option_type, option_shuffle).mainloop()
