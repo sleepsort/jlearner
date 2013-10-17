@@ -79,19 +79,19 @@ class Util():
 
   @staticmethod
   def ispunct(ch):
-    return unicode(ch) in [u'，', u'。']
+    return unicode(ch) in u'，。'
 
   @staticmethod
   def istyoon(ch):
-    return unicode(ch) in [u'ー']
+    return unicode(ch) in u'ー'
 
   @staticmethod
   def issokuon(ch):
-    return unicode(ch) in [u'っ', u'ッ']
+    return unicode(ch) in u'っッ'
 
   @staticmethod
   def isyoon(ch):
-    return unicode(ch) in [u'ゃ', u'ゅ', u'ょ', u'ャ', u'ュ', u'ョ']
+    return unicode(ch) in u'ゃゅょャュョ'
 
   @staticmethod
   def add_solution_char(problem, kana): 
@@ -145,11 +145,11 @@ class Util():
   def match_romaji(truth, test):
     if len(truth) != len(test):
       return False
-    for noise in ['.', ',', ' ', '\n', '\t']:
+    for noise in '., \n\t':
       truth = truth.replace(noise, '')
       test = test.replace(noise, '')    
     for (x, y) in zip(truth, test):
-      if x == '~' and y in ['i', 'u', 'o']:
+      if x == '~' and y in '-iuo':
         continue
       if x != y:
         return False
@@ -157,7 +157,7 @@ class Util():
 
   @staticmethod
   def match_kana(truth, test):
-    for noise in [u'　', u'，', u'。', u' ', u'\n']:
+    for noise in u'　，。 \n\t':
       truth = truth.replace(noise, '')
       test = test.replace(noise, '')
     return truth == test 
@@ -349,7 +349,10 @@ class Runner(object):
       solution = item.kanji
     else:
       solution = key
-    fake = Util.kana_to_romaji(key)
+    if item.romaji:
+      fake = item.romaji
+    else:
+      fake = Util.kana_to_romaji(key)
     success = Util.match_kana(solution, input)
     success = success or Util.match_romaji(fake, input)
     if success:
