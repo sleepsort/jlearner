@@ -140,7 +140,7 @@ class Util():
 
   @staticmethod
   def match_romaji(truth, test):
-    for noise in '.,~ \n\t':
+    for noise in '., \n\t':
       truth = truth.replace(noise, '')
       test = test.replace(noise, '')
     if len(truth) != len(test):
