@@ -17,7 +17,7 @@ USAGE= '''
       -bt  : Chinese->Kana using buttons
 
     TEST_CORPUS:
-      data files in data/dict (lesson06.dat as default)
+      data files in data/dict (lesson07.dat as default)
 '''
 
 COLUMNS = 11
@@ -584,7 +584,7 @@ if __name__ == "__main__":
     sys.exit(1)
 
   option_type = '-im'
-  dict_files = ['data/dict/lesson06.dat']
+  dict_files = ['data/dict/lesson07.dat']
 
   if option1:
     option_type = option1[0]
