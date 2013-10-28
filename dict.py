@@ -17,7 +17,7 @@ USAGE= '''
       -bt  : Chinese->Kana using buttons
 
     TEST_CORPUS:
-      data files in data/dict (lesson07.dat as default)
+      data files in data/dict (lesson08.dat as default)
 '''
 
 COLUMNS = 11
@@ -185,7 +185,7 @@ class DictProcessor():
         self.linenum = 1
       fields = self.pending[self.linenum].split()
       if len(fields) <= 2:
-        print >> sys.stderr, "Bogus line? %s" % fields
+        #print >> sys.stderr, "Bogus line? %s" % fields
         continue
       return fields
 
@@ -584,7 +584,7 @@ if __name__ == "__main__":
     sys.exit(1)
 
   option_type = '-im'
-  dict_files = ['data/dict/lesson07.dat']
+  dict_files = ['data/dict/lesson08.dat']
 
   if option1:
     option_type = option1[0]
