@@ -355,7 +355,8 @@ class Runner(object):
       fake = item.romaji
     else:
       fake = Util.kana_to_romaji(key)
-    print fake
+    print fake,
+    print "{%s}" % input
     success = Util.match_kana(solution, input)
     success = success or Util.match_romaji(fake, input)
     if success:
@@ -502,7 +503,7 @@ class JLearner(Frame):
         self.active_widgets["misc"]["foreground"] = FAIL_COLOR
         self.active_widgets["misc"]["font"] = FAIL_FONT
       self.active_widgets["input"]["state"] = 'disabled'
-      self.after(5000, self.next)
+      self.after(4000, self.next)
 
   def add_kana(self, event):
     if not self.lock:
