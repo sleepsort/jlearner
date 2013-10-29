@@ -4,6 +4,7 @@ A Python based utility to help learning Japanese. Currently used to memorize Kan
 
 With the help of this tool, I can become <b>proficient</b> with around 80 new Japanese words in one afternoon. Ah, I'm not very quick when learning language, actually.
 
+Personally I prefer this routine for [Ebbinghaus curve](http://en.wikipedia.org/wiki/Forgetting_curve): do a test on Day 1, then repeat on Day 2, Day 4, Day 7, Day 11, Day 13, Day 14.
 
 ## Kana learning
 
@@ -34,6 +35,7 @@ Two modes are available:
       tests Hiragana with buttons, I changed the Gojūon a bit so that 
       we can input some special characters.
 
+Before completing the dictionary file you specified, the test will start from last quit, remembering all the passes and fails you did last time.
 
 ## Installation
 
