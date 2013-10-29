@@ -143,7 +143,6 @@ class Util():
     for noise in ',.~ \n\t':
       truth = truth.replace(noise, '')
       test = test.replace(noise, '')
-    print "romaji: [" + truth + "--" + test +"]"
     if len(truth) != len(test):
       return False
     for (x, y) in zip(truth, test):
@@ -158,7 +157,6 @@ class Util():
     for noise in u'　，。〜 \n\t':
       truth = truth.replace(noise, '')
       test = test.replace(noise, '')
-    print "kana:   [" + truth + "--" + test + "]"
     return truth == test
 
 class DictProcessor():
@@ -344,6 +342,11 @@ class Runner(object):
 
   def test(self, input):
     key, item = self.key, Dict.dicts[self.key]
+    print item.kana, 
+    if item.accent:
+      print "(%s)" % item.accent,
+    if item.kanji:
+      print item.kanji,
     if self.option_type == '-im' and item.kanji:
       solution = item.kanji
     else:
@@ -352,6 +355,7 @@ class Runner(object):
       fake = item.romaji
     else:
       fake = Util.kana_to_romaji(key)
+    print fake
     success = Util.match_kana(solution, input)
     success = success or Util.match_romaji(fake, input)
     if success:
@@ -498,7 +502,7 @@ class JLearner(Frame):
         self.active_widgets["misc"]["foreground"] = FAIL_COLOR
         self.active_widgets["misc"]["font"] = FAIL_FONT
       self.active_widgets["input"]["state"] = 'disabled'
-      self.after(3000, self.next)
+      self.after(5000, self.next)
 
   def add_kana(self, event):
     if not self.lock:
