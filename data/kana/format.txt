@@ -1,0 +1,10 @@
+At most two fields per line, separated by space:
+
+[kana] [romaji]
+
+Empty lines are intended, it is used as paddings for
+UI layout.
+
+A '#' in front of any line indicates that this kana
+character will not be used in tests, add this manually
+for specific tests.
