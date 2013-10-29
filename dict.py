@@ -117,7 +117,7 @@ class Util():
       if Util.ispunct(ch):
         romaji.append(" ")
       elif Util.istyoon(ch):
-        romaji.append("~")
+        romaji.append("-")
       elif Util.issokuon(ch):
         repeat = True
         romaji.append("z")
@@ -140,13 +140,14 @@ class Util():
 
   @staticmethod
   def match_romaji(truth, test):
-    for noise in '., \n\t':
+    for noise in ',.~ \n\t':
       truth = truth.replace(noise, '')
       test = test.replace(noise, '')
+    print "romaji: [" + truth + "--" + test +"]"
     if len(truth) != len(test):
       return False
     for (x, y) in zip(truth, test):
-      if x == '~' and y in '-iuo':
+      if x == '-' and y in '-aiueo':
         continue
       if x != y:
         return False
@@ -157,6 +158,7 @@ class Util():
     for noise in u'　，。〜 \n\t':
       truth = truth.replace(noise, '')
       test = test.replace(noise, '')
+    print "kana:   [" + truth + "--" + test + "]"
     return truth == test
 
 class DictProcessor():
