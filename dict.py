@@ -18,6 +18,9 @@ USAGE= '''
 
     TEST_CORPUS:
       data files in data/dict (lesson09.dat as default)
+
+    SPECIAL_OPTION:
+      -m   : hide number of kanas
 '''
 
 COLUMNS = 11
@@ -54,7 +57,7 @@ class Util():
         Util.kanas[fields[0]] = fields[1]
 
   @staticmethod
-  def generate_problem(kana):
+  def generate_problem(kana, hide_length):
     problem = ""
     for idx, ch in enumerate(kana):
       if Util.ispunct(ch):
@@ -64,7 +67,10 @@ class Util():
       if (idx+1) % 10 == 0:
         problem += "\n"
       else:
-        problem += " "
+        if hide_length:
+          problem += "_"
+        else:
+          problem += " "
     return problem[:-1]
 
   @staticmethod
@@ -315,8 +321,9 @@ class Logger(object):
 
 
 class Runner(object):
-  def __init__(self, option_type):
+  def __init__(self, option_type, hide_length):
     self.option_type = option_type
+    self.hide_length = hide_length
     self.pended = set(Dict.dicts.keys())
     self.failed = set()
     self.key  = None
@@ -336,7 +343,7 @@ class Runner(object):
       key = random.sample(self.pended, 1)[0]
       item = Dict.dicts[key]
       self.key = key
-      return totalpass, total, Util.generate_problem(key), item.chinese
+      return totalpass, total, Util.generate_problem(key, self.hide_length), item.chinese
     self.logger.merge()
     return totalpass, total, None, None
 
@@ -377,17 +384,18 @@ class Runner(object):
     return self.totalpass, self.totalfail
 
 class JLearner(Frame):
-  def __init__(self, option_type='-im', dict_files=[]):
+  def __init__(self, option1, option2, dict_files):
     """Create and grid several components into the frame"""
     Frame.__init__(self)
 
     Util.load_kana_dict(DEFAULT_KANA_PATH)
     Dict.load_problem_dict(dict_files)
 
-    self.option_type = option_type
+    self.option_type = option1
+    self.hide_length = option2
     self.dict_files = dict_files
 
-    self.runner = Runner(option_type)
+    self.runner = Runner(option1, option2)
 
     # text variables that might be updated in real time
     self.active_text = {"kana" : StringVar(), "accent"  : StringVar(),
@@ -409,7 +417,7 @@ class JLearner(Frame):
     self.bind_all("<Escape>", self.del_kana)
     self.pack(expand = NO, fill = BOTH)
     self.master.title("Japanese Learning")
-    if option_type == '-im':
+    if self.option_type == '-im':
       self.master.geometry("350x200")
     else:
       self.master.geometry("350x800")
@@ -569,8 +577,8 @@ class JLearner(Frame):
     del_button.bind("<ButtonRelease>", self.del_kana);
     self.row += (len(records) + COLUMNS - 1) / COLUMNS
 
-def main(option_type, dict_files):
-  JLearner(option_type, dict_files).mainloop()
+def main(option_type1, option_type2, dict_files):
+  JLearner(option_type1, option_type2, dict_files).mainloop()
 
 if __name__ == "__main__":
   argv = sys.argv[1:]
@@ -585,17 +593,22 @@ if __name__ == "__main__":
 
   option1 = set(options) & set(['-im', '-bt'])
   option1 = list(option1)
+  option2 = set(options) & set(['-m'])
+  option2 = list(option2)
 
-  if options and not option1:
+  if options and not option1 and not option2:
     print USAGE
     sys.exit(1)
 
-  option_type = '-im'
+  option_type1 = '-im'
+  option_type2 = ''
   dict_files = ['data/dict/lesson09.dat']
 
   if option1:
-    option_type = option1[0]
+    option_type1 = option1[0]
+  if option2:
+    option_type2 = option2[0]
   if files:
     dict_files = files
 
-  main(option_type, dict_files)
+  main(option_type1, option_type2, dict_files)

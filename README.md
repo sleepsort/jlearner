@@ -37,6 +37,8 @@ Two modes are available:
 
 Before completing the dictionary file you specified, the test will start from last quit, remembering all the passes and fails you did last time.
 
+There is also a special mode which hides the length of current word/phrase.
+
 ## Installation
 
 You need to install [Python 2](http://www.python.org/getit/)
