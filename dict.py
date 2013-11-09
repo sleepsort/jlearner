@@ -20,7 +20,7 @@ USAGE= '''
       data files in data/dict (lesson09.dat as default)
 
     SPECIAL_OPTION:
-      -m   : hide number of kanas
+      -m   : hide number of kanas (only available for -im mode)
 '''
 
 COLUMNS = 11
@@ -323,7 +323,7 @@ class Logger(object):
 class Runner(object):
   def __init__(self, option_type, hide_length):
     self.option_type = option_type
-    self.hide_length = hide_length
+    self.hide_length = hide_length and option_type == '-im'
     self.pended = set(Dict.dicts.keys())
     self.failed = set()
     self.key  = None
