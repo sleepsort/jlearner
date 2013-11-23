@@ -17,13 +17,11 @@ USAGE= '''
       -bt  : Chinese->Kana using buttons
 
     TEST_CORPUS:
-      data files in data/dict (lesson11.dat as default)
+      data files in data/dict (lesson12.dat as default)
 
     SPECIAL_OPTION:
       -m   : hide number of kanas (only available for -im mode)
 '''
-
-COLUMNS = 11
 
 FONT_BASE = "Fixsys"
 #FONT_BASE = "DroidSansMono"
@@ -37,6 +35,8 @@ DEFAULT_FONT_LARGE  = "%s 15 bold" % FONT_BASE
 DEFAULT_COLOR = "black"
 SUCCESS_COLOR = "black"
 FAIL_COLOR    = "red"
+
+COLUMNS = 11
 
 DEFAULT_KANA_PATH = r"data/kana/mixed.dat"
 
@@ -602,7 +602,7 @@ if __name__ == "__main__":
 
   option_type1 = '-im'
   option_type2 = ''
-  dict_files = ['data/dict/lesson11.dat']
+  dict_files = ['data/dict/lesson12.dat']
 
   if option1:
     option_type1 = option1[0]
