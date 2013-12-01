@@ -60,6 +60,17 @@ Remove all files under `log` so that it will keep your own progress.
     └── kana.py   -> Kana test
 
 
+## Details about dictionaries
+
+* lesson\*.dat are new words I learnt in corresponding lessons. It is expected to see lesson01~lesson04 missing, because we should
+be learning hiragana/katakana at that time.
+
+* number\*.dat are words such as numeral, month/week/day/hour/minute, or other counter words.
+
+* tense\*.dat are lexical changes for words such as adj. and verb.
+
+
+
 ## License
 
 [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0)
