@@ -17,7 +17,7 @@ USAGE= '''
       -bt  : Chinese->Kana using buttons
 
     TEST_CORPUS:
-      data files in data/dict (lesson12.dat as default)
+      data files in data/dict (lesson13.dat as default)
 
     SPECIAL_OPTION:
       -m   : hide number of kanas (only available for -im mode)
@@ -602,7 +602,7 @@ if __name__ == "__main__":
 
   option_type1 = '-im'
   option_type2 = ''
-  dict_files = ['data/dict/lesson12.dat']
+  dict_files = ['data/dict/lesson13.dat']
 
   if option1:
     option_type1 = option1[0]
