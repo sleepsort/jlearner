@@ -359,11 +359,17 @@ class Runner(object):
 
   def test(self, input):
     key, item = self.key, Dict.dicts[self.key]
-    print item.kana, 
+    try:
+      print item.kana, 
+    except UnicodeEncodeError, message:
+      print "----",
     if item.accent:
       print "(%s)" % item.accent,
     if item.kanji:
-      print item.kanji,
+      try:
+        print item.kanji,
+      except UnicodeEncodeError, message:
+        print "----",
     if self.option_type == '-im' and item.kanji:
       solution = item.kanji
     else:
