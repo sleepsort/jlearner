@@ -1,10 +1,18 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
+import sys
+import os
+import glob
+
+prefix = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.join(prefix, 'lib', 'python27.zip'))
+sys.path.append(os.path.join(prefix, 'lib', 'python27.zip', 'lib-tk'))
+sys.path.append(os.path.join(prefix, 'lib', 'DLLs'))
+
+import random
 from Tkinter import *
 from tkMessageBox import *
-import random
-import sys
 
 USAGE= '''
   usage:

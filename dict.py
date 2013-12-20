@@ -1,12 +1,22 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
-from Tkinter import *
-from tkMessageBox import *
-import random
 import sys
 import os
 import glob
+
+if sys.platform == "win32":
+  prefix = os.path.dirname(os.path.abspath(__file__))
+  sys.path.append(os.path.join(prefix, 'lib', 'python27.zip'))
+  sys.path.append(os.path.join(prefix, 'lib', 'python27.zip', 'lib-tk'))
+  sys.path.append(os.path.join(prefix, 'lib', 'DLLs'))
+  VERBOSE = False
+else:
+  VERBOSE = True
+
+import random
+from Tkinter import *
+from tkMessageBox import *
 
 USAGE= '''
   usage:
