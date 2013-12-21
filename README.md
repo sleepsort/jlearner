@@ -39,6 +39,12 @@ Before completing the dictionary file you specified, the test will start from la
 
 There is also a special mode which hides the length of current word/phrase.
 
+## Review (Linux only)
+
+Once enough test logs are collected, you can try this to retry the most fallible words for you:
+
+    ./tools/review.sh
+
 ## Installation
 
 You need to install [Python 2](http://www.python.org/getit/)
