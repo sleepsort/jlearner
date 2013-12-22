@@ -5,10 +5,16 @@ import sys
 import os
 import glob
 
-prefix = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.join(prefix, 'lib', 'python27.zip'))
-sys.path.append(os.path.join(prefix, 'lib', 'python27.zip', 'lib-tk'))
-sys.path.append(os.path.join(prefix, 'lib', 'DLLs'))
+if sys.platform == "win32":
+  prefix = os.path.dirname(os.path.abspath(__file__))
+  sys.path.append(os.path.join(prefix, 'lib', 'python27.zip'))
+  sys.path.append(os.path.join(prefix, 'lib', 'python27.zip', 'lib-tk'))
+  sys.path.append(os.path.join(prefix, 'lib', 'DLLs'))
+
+try:
+  import configparser
+except ImportError:
+  import ConfigParser as configparser
 
 import random
 from Tkinter import *
@@ -26,6 +32,9 @@ USAGE= '''
 
     RANDOM_OPTION:
       -s   : shuffle character table
+
+    If no options are supplied and config.ini exists, it loads
+    configuration from config.ini.
 '''
 
 COLUMNS = 5
@@ -257,6 +266,21 @@ class JLearner(Frame):
 def main(option_type, option_shuffle):
   JLearner(option_type, option_shuffle).mainloop()
 
+def load_config():
+  config = configparser.ConfigParser()
+  config.read('config.ini')
+  option_type    = config.get('kana', 'testmode')
+  option_shuffle = config.get('kana', 'shuffle')
+  if option_type in set(['hr', 'kr', 'rh', 'rk']):
+    option_type = '-' + option_type
+  else:
+    return None
+  if option_shuffle == 'yes':
+    option_shuffle = '-s'
+  else:
+    option_shuffle = ''
+  return option_type, option_shuffle
+
 if __name__ == "__main__":
   argv = sys.argv[1:]
 
@@ -269,12 +293,21 @@ if __name__ == "__main__":
     print USAGE
     sys.exit(1)
 
-  option_type = '-hr'
-  option_shuffle = ''
+  config = False
+  try:
+    option_type, option_shuffle = load_config()
+    config = True
+  except Exception, e:
+    print >> sys.stderr, "load config error:", e 
 
-  if option1:
-    option_type = option1[0]
-  if option2:
-    option_shuffle = option2[0]
+  if option1 or option2 or not config:
+    # default options 
+    # (when no config file exists, and no arguments)
+    option_type = '-hr'
+    option_shuffle = ''
+    if option1:
+      option_type = option1[0]
+    if option2:
+      option_shuffle = option2[0]
 
   main(option_type, option_shuffle)

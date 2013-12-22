@@ -62,8 +62,10 @@ Remove all files under `log` so that it will keep your own progress.
     ├── log       -> Permanent log files
     ├── tools     -> Development only
     │
-    ├── dict.py   -> Word test
-    └── kana.py   -> Kana test
+    ├── config.ini-> Config file
+    │
+    ├── dict.py   -> Word test script
+    └── kana.py   -> Kana test script
 
 
 ## Details about dictionaries

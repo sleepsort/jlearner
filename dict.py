@@ -10,9 +10,11 @@ if sys.platform == "win32":
   sys.path.append(os.path.join(prefix, 'lib', 'python27.zip'))
   sys.path.append(os.path.join(prefix, 'lib', 'python27.zip', 'lib-tk'))
   sys.path.append(os.path.join(prefix, 'lib', 'DLLs'))
-  VERBOSE = False
-else:
-  VERBOSE = True
+
+try:
+  import configparser
+except ImportError:
+  import ConfigParser as configparser
 
 import random
 from Tkinter import *
@@ -27,10 +29,13 @@ USAGE= '''
       -bt  : Chinese->Kana using buttons
 
     TEST_CORPUS:
-      data files in data/dict (lesson15.dat as default)
+      data files in data/dict (lesson05.dat as default)
 
     SPECIAL_OPTION:
       -m   : hide number of kanas (only available for -im mode)
+
+    If no options are supplied and config.ini exists, it loads
+    configuration from config.ini.
 '''
 
 FONT_BASE = "Fixsys"
@@ -596,6 +601,29 @@ class JLearner(Frame):
 def main(option_type1, option_type2, dict_files):
   JLearner(option_type1, option_type2, dict_files).mainloop()
 
+def load_config():
+  config = configparser.ConfigParser()
+  config.read('config.ini')
+  option_type1 = config.get('dict', 'testmode')
+  option_type2 = config.get('dict', 'hidelength')
+  test_dir  = config.get('dict', 'testdir').split('|')
+  test_file = config.get('dict', 'testfile').split('|')
+  if option_type1 in set(['im', 'bt']):
+    option_type1 = '-' + option_type1
+  else:
+    return None
+  if option_type2 == 'yes':
+    option_type2 = '-m'
+  else:
+    option_type2 = ''
+  dict_files = []
+  for dir in test_dir:
+    dir = dir.strip()
+    for file in test_file:
+      file = file.strip()
+      dict_files += glob.glob("%s/%s" % (dir, file))
+  return option_type1, option_type2, dict_files
+
 if __name__ == "__main__":
   argv = sys.argv[1:]
  
@@ -616,15 +644,24 @@ if __name__ == "__main__":
     print USAGE
     sys.exit(1)
 
-  option_type1 = '-im'
-  option_type2 = ''
-  dict_files = ['data/dict/lesson15.dat']
+  config = False
+  try:
+    option_type1, option_type2, dict_files = load_config()
+    config = True
+  except Exception, e:
+    print >> sys.stderr, "load config error:", e 
 
-  if option1:
-    option_type1 = option1[0]
-  if option2:
-    option_type2 = option2[0]
-  if files:
-    dict_files = files
+  if options or not config:
+    # default options 
+    # (when no config file exists, and no arguments)
+    option_type1 = '-im'
+    option_type2 = ''
+    dict_files = ['data/dict/lesson05.dat']
+    if option1:
+      option_type1 = option1[0]
+    if option2:
+      option_type2 = option2[0]
+    if files:
+      dict_files = files
 
   main(option_type1, option_type2, dict_files)
