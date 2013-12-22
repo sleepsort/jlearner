@@ -2,6 +2,7 @@
 # Try to catch words which fails frequently.
 # Currently, it make uses top 50 fails from 
 # the logfile
+# The fail rate is defined as: sqrt(fail) / pass
 
 # How many fallible words to review
 TOPN=50
@@ -20,30 +21,39 @@ cd $DIR
 cd ..
 
 FULL=`mktemp`
-HEAD=`mktemp`
+PART=`mktemp`
 HARD=`mktemp`
+JOIN=`mktemp`
+
+# by default we only use lesson files
+DICTS=data/dict/lesson*.dat
+
+(( $# >= 1)) && DICTS=$*
 
 # get full dicts 
-tail -q --lines=+2 data/dict/*.dat | \
-  sed '/^$/d'                      | \
-  sort -k2 > $FULL
+tail -q --lines=+2 $DICTS  | \
+  sed '/^$/d'              | \
+  sort -k2 > $PART
 
-# get most fallible words
-tail -q --lines=+2 log/dict.im.dat      | \
-  awk '{print $3, $2/$1}'               | \
-  sort -grk2                            | \
-  head -$TOPN                           | \
-  awk '{printf "%s [%0.2f]\n", $1, $2}' | \
-  sort -k1 > $HEAD
+# calculate fallible rate 
+tail -q --lines=+2 log/dict.im.dat | \
+  awk '{print $3, sqrt($2)/$1}'    | \
+  sort -k1 > $FULL
 
-# steal the dict head
-cat data/dict/*.dat | head -1 > $HARD
+# restrict words to be from DICT
+join -1 1 -2 2 $FULL $PART               | \
+  sort -grk2                             | \
+  awk '{printf "%s [%0.2f]\n", $1, $2}'  | \
+  head -$TOPN                            | \
+  sort -k1 > $HARD
 
-# join and get a fake dictionary, containing most fallible words
-join -1 2 -2 1 $FULL $HEAD | awk '{t=$1;$1=$2;$2=t;print}' >> $HARD
+# fake dict head
+echo "#DICT" > $JOIN
 
-rm -f $HEAD $FULL
+join -1 2 -2 1 $PART $HARD | awk '{t=$1;$1=$2;$2=t;print}' >> $JOIN
 
-./dict.py $HARD
+rm -f $FULL $PART $HARD
 
-rm -f $HARD 
+./dict.py $JOIN
+
+rm -f $JOIN 

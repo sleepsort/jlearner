@@ -237,15 +237,19 @@ class Dict():
       accent = line[0]
       kana = line[1]
       what = line[2]
+      offset = 2
       if what[0] == '[' and what[-1] == ']':
         kanji = what
+        offset += 1
       elif what[0] == '<' and what[-1] == '>':
         romaji = what
+        offset += 1
       if len(line) > 3:
         what = line[3]
         if what[0] == '<' and what[-1] == '>':
           romaji = what
-      chinese = set(line) - set((accent, kana, kanji, romaji))
+          offset += 1
+      chinese = line[offset:]
       chinese = ' '.join(list(chinese))
       if accent == '?':
         accent = None
