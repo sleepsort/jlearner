@@ -653,7 +653,7 @@ if __name__ == "__main__":
   except Exception, e:
     print >> sys.stderr, "load config error:", e 
 
-  if options or not config:
+  if options or files or not config:
     # default options 
     # (when no config file exists, and no arguments)
     option_type1 = '-im'
