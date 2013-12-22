@@ -625,8 +625,10 @@ def load_config():
   return option_type1, option_type2, dict_files
 
 if __name__ == "__main__":
+  os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
   argv = sys.argv[1:]
- 
+
   options = []
   files = []
   for x in argv:

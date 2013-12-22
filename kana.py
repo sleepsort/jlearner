@@ -282,6 +282,8 @@ def load_config():
   return option_type, option_shuffle
 
 if __name__ == "__main__":
+  os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
   argv = sys.argv[1:]
 
   option1 = set(argv) & set(['-hr', '-kr', '-rk', '-rh'])
