@@ -80,3 +80,7 @@ be learning hiragana/katakana at that time.
 ## License
 
 [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0)
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/sleepsort/jlearner/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
