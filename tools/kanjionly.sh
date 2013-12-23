@@ -1,7 +1,7 @@
 #!/bin/sh
 # Try to catch words with 'Kanji', so 
 # that by providing Kanji as hints, we 
-# can practise how kanji are pronounced
+# can practise how they are pronounced
 # in Japanese
 
 export LC_COLLATE=C
@@ -20,12 +20,17 @@ DICTS=data/dict/lesson*.dat
 
 echo "#DICT" > $TEMP
 
-# get words with kanji
 tail -q --lines=+2 $DICTS  | \
   sed '/^$/d'              | \
   grep "\[[^ ]*\]"         | \
-  awk '{print $1,$2,$3}'   | \
-  tr -d '[]' >> $TEMP
+  tr -d '[]'               | \
+  awk '{
+    if (match($4, /^<[^ ]*>$/)) {
+      print $1,$2,$4,$3;
+    } else {
+      print $1,$2,$3;
+    }
+  }' >> $TEMP
 
 ./dict.py $TEMP
 
