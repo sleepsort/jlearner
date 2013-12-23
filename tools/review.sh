@@ -1,7 +1,7 @@
 #!/bin/sh
 # Try to catch words which fails frequently.
 # Currently, it make uses top 50 fails from 
-# the logfile
+# the logfile.
 # The fail rate is defined as: sqrt(fail) / pass
 
 # How many fallible words to review
