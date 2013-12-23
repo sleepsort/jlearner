@@ -8,6 +8,10 @@ Personally I prefer this routine for [Ebbinghaus curve](http://en.wikipedia.org/
 
 ## Kana learning
 
+    python2 kana.py
+
+To see details of arguments:
+
     python2 kana.py -h
 
 Four modes are available:
@@ -22,6 +26,10 @@ character table, making the test more difficult.
 
 
 ## Words learning
+
+    python2 dict.py
+
+To see details of arguments:
    
     python2 dict.py -h
 
@@ -44,6 +52,11 @@ There is also a special mode which hides the length of current word/phrase.
 Once enough test logs are collected, you can try this to retry the most fallible words for you:
 
     ./tools/review.sh
+
+And a 'Kanji-only' mode to practise pronunciation:
+
+    ./tools/kanjionly.sh
+
 
 ## Installation
 
