@@ -97,7 +97,7 @@ class Util():
 
   @staticmethod
   def ispunct(ch):
-    return unicode(ch) in u'，。〜'
+    return unicode(ch) in u'，。〜・'
 
   @staticmethod
   def istyoon(ch):
@@ -175,7 +175,7 @@ class Util():
 
   @staticmethod
   def match_kana(truth, test):
-    for noise in u'　，。〜 \n\t':
+    for noise in u'　，。〜・ \n\t':
       truth = truth.replace(noise, '')
       test = test.replace(noise, '')
     return truth == test
