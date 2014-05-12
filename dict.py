@@ -154,7 +154,12 @@ class Util():
       else:
         cur = Util.kanas[ch]
         if repeat:
-          romaji[i - 1] = cur[:1]
+          if cur == 'chi':
+            romaji[i - 1] = 't'  # tya, tyu, tyo
+          elif cur == 'ji':
+            romaji[i - 1] = 'z'  # zya, zyu, zyo
+          else:
+            romaji[i - 1] = cur[:1]
           repeat = False
         romaji.append(cur)
     return ''.join(romaji)
