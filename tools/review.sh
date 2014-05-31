@@ -28,6 +28,7 @@ JOIN=`mktemp`
 # by default we only use lesson files
 DICTS=`ls data/dict/lesson1[6-9].dat`
 DICTS=$DICTS' '`ls data/dict/lesson2*.dat`
+DICTS=$DICTS' '`ls data/dict/lesson3*.dat`
 
 (( $# >= 1)) && DICTS=$*
 
