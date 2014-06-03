@@ -22,4 +22,4 @@ tail -q --lines=+2 $DICTS  | \
     } else {
       print $2;
     }
-  }' | tr -d '[]' | sed '/^$/d' | sort | uniq
+  }' | tr -d '[]' | sed '/^[ ]*$/d' | sort | uniq
